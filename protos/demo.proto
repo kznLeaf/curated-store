@@ -1,0 +1,60 @@
+syntax = "proto3";
+
+option go_package = "demo/hipstershop";
+
+package hipstershop;
+
+message Empty {}
+
+message Money {
+    // The 3-letter currency code defined in ISO 4217.
+    string currency_code = 1;
+
+    // The whole units of the amount. 整数部分，单位为货币代码
+    // For example if `currencyCode` is `"USD"`, then 1 unit is one US dollar.
+    int64 units = 2;
+
+    // Number of nano (10^-9) units of the amount.  纳秒单位，用于表示小数部分
+    // The value must be between -999,999,999 and +999,999,999 inclusive.
+    // If `units` is positive, `nanos` must be positive or zero.
+    // If `units` is zero, `nanos` can be positive, zero, or negative.
+    // If `units` is negative, `nanos` must be negative or zero.
+    // For example $-1.75 is represented as `units`=-1 and `nanos`=-750,000,000. 负数表示退款，正数表示付款
+    int32 nanos = 3;
+}
+
+// ---------------Product Catalog----------------
+
+service ProductCatalogService {
+    rpc ListProducts(Empty) returns (ListProductsResponse) {}
+    rpc GetProduct(GetProductRequest) returns (Product) {}
+    rpc SearchProducts(SearchProductsRequest) returns (SearchProductsResponse) {}
+}
+
+message Product {
+    string id = 1;
+    string name = 2;
+    string description = 3;
+    string picture = 4;
+    Money price_usd = 5;
+
+    // Categories such as "clothing" or "kitchen" that can be used to look up
+    // other related products.
+    repeated string categories = 6;
+}
+
+message ListProductsResponse {
+    repeated Product products = 1;
+}
+
+message GetProductRequest {
+    string id = 1;
+}
+
+message SearchProductsRequest {
+    string query = 1;
+}
+
+message SearchProductsResponse {
+    repeated Product results = 1;
+}
