@@ -1,4 +1,4 @@
-module github.com/kznLeaf/curated-store/tree/main/src/frontend
+module github.com/kznLeaf/curated-store/src/frontend
 
 go 1.25.6
 
@@ -8,6 +8,8 @@ require (
 )
 
 require (
+	github.com/gorilla/mux v1.8.1
+	github.com/sirupsen/logrus v1.9.4
 	golang.org/x/net v0.47.0 // indirect
 	golang.org/x/sys v0.38.0 // indirect
 	golang.org/x/text v0.31.0 // indirect

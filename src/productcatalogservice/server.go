@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	pb "github.com/kznLeaf/curated-store/tree/main/src/productcatalogservice/genproto"
+	pb "github.com/kznLeaf/curated-store/src/productcatalogservice/genproto"
 
 	"github.com/sirupsen/logrus"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
@@ -63,12 +63,12 @@ func run(port string) string {
 	srv = grpc.NewServer(
 		grpc.StatsHandler(otelgrpc.NewServerHandler())) // StatsHandler 同时处理 Unary 和 Stream 请求的追踪。
 
-	svc := &productCatalog{}
-	err = loadCatalog(&svc.catalog)
+	svc := &productCatalog{} // 创建service具体实现的实例
+	err = loadCatalog(&svc.catalog)	// 加载数据到service中
 	if err != nil {
 		log.Fatalf("could not parse product catalog: %v", err)
 	}
-	pb.RegisterProductCatalogServiceServer(srv, svc)
+	pb.RegisterProductCatalogServiceServer(srv, svc) // 将该服务的实例注册到gRPC服务器
 
 	go srv.Serve(listener)
 	return listener.Addr().String()

@@ -2,9 +2,10 @@ package main
 
 import (
 	"context"
-	pb "github.com/kznLeaf/curated-store/tree/main/src/productcatalogservice/genproto"
 	"os"
 	"testing"
+
+	pb "github.com/kznLeaf/curated-store/src/productcatalogservice/genproto"
 )
 
 var (

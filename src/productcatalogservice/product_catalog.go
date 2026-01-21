@@ -2,9 +2,10 @@ package main
 
 import (
 	"context"
-	pb "github.com/kznLeaf/curated-store/tree/main/src/productcatalogservice/genproto"
 	"strings"
 	"time"
+
+	pb "github.com/kznLeaf/curated-store/src/productcatalogservice/genproto"
 )
 
 type productCatalog struct {

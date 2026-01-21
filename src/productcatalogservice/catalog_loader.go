@@ -1,9 +1,10 @@
 package main
 
 import (
-	pb "github.com/kznLeaf/curated-store/tree/main/src/productcatalogservice/genproto"
 	"encoding/json"
 	"os"
+
+	pb "github.com/kznLeaf/curated-store/src/productcatalogservice/genproto"
 )
 
 func loadCatalog(catalog *pb.ListProductsResponse) error {
