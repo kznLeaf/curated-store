@@ -1,0 +1,19 @@
+apiVersion: skaffold/v3
+kind: Config
+metadata:
+  name: app
+build:
+  platforms: ["linux/amd64"]
+  artifacts:
+  - image: productcatalogservice. # Kustomize（通过 Skaffold）通过 image 字段的值 来匹配配置文件和微服务。
+    context: src/productcatalogservice
+  tagPolicy:
+    gitCommit: {}
+  local:
+    useDockerCLI: true     # 必须启用才能使用 BuildKit
+    useBuildkit: true      # 启用 BuildKit
+    concurrentBuilds: 0
+manifests:
+  kustomize:
+    paths:
+    - kubernetes-manifests

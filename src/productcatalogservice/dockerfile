@@ -1,4 +1,4 @@
-
+# 构建阶段
 FROM --platform=$BUILDPLATFORM golang:1.23.4-alpine AS builder
 ARG TARGETOS
 ARG TARGETARCH
@@ -15,6 +15,7 @@ COPY . .
 ARG SKAFFOLD_GO_GCFLAGS
 RUN GOOS=${TARGETOS} GOARCH=${TARGETARCH} CGO_ENABLED=0 go build -gcflags="${SKAFFOLD_GO_GCFLAGS}" -o /productcatalogservice .
 
+#运行阶段
 FROM scratch
 
 WORKDIR /src
