@@ -18,7 +18,6 @@ metadata:
   name: productcatalogservice
   labels:
     app: productcatalogservice
-# Pod选择器
 spec:
   selector:
     matchLabels:
@@ -44,21 +43,21 @@ spec:
               - ALL
           privileged: false
           readOnlyRootFilesystem: true
-        image: productcatalogservice # 实现匹配特定的镜像
+        image: productcatalogservice
         ports:
         - containerPort: 3550
-        env:
+        env: # 向容器传递环境变量
         - name: PORT
           value: "3550"
         - name: DISABLE_PROFILER
           value: "1"
-        readinessProbe:
+        readinessProbe: # gRPC探针，直接使用gRPC端口进行健康检查
           grpc:
             port: 3550
-        livenessProbe:
+        livenessProbe: # gRPC探针，直接使用gRPC端口进行健康检查
           grpc:
             port: 3550
-        resources:
+        resources: # 资源限制和请求
           requests:
             cpu: 100m
             memory: 64Mi

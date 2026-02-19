@@ -6,6 +6,9 @@ import (
 	"time"
 
 	pb "github.com/kznLeaf/curated-store/src/productcatalogservice/genproto"
+	"google.golang.org/grpc/codes"
+	healthpb "google.golang.org/grpc/health/grpc_health_v1"
+	"google.golang.org/grpc/status"
 )
 
 type productCatalog struct {
@@ -14,7 +17,24 @@ type productCatalog struct {
 	maps    map[string]*pb.Product
 }
 
-// parseCatalog 解析产品目录
+// Check 属于 HealthServer 接口的一部分，获取指定服务的状态。
+func (p *productCatalog) Check(ctx context.Context, req *healthpb.HealthCheckRequest) (*healthpb.HealthCheckResponse, error) {
+	return &healthpb.HealthCheckResponse{Status: healthpb.HealthCheckResponse_SERVING}, nil
+}
+
+// List 属于 HealthServer 接口的一部分，获取所有可用服务的非原子快照。
+func (p *productCatalog) List(ctx context.Context, req *healthpb.HealthListRequest) (*healthpb.HealthListResponse, error) {
+    // 简单的空实现
+    return &healthpb.HealthListResponse{}, nil
+}
+
+// Watch 属于 HealthServer 接口的一部分，每当服务状态发生变化时，服务器都会发送一条新的消息。 
+// TODO 实现以支持更细粒度的健康检查。
+func (p *productCatalog) Watch(req *healthpb.HealthCheckRequest, ws healthpb.Health_WatchServer) error {
+	return status.Errorf(codes.Unimplemented, "health check via Watch not implemented")
+}
+
+// parseCatalog 解析产品目录。被 ListProducts 和 GetProduct 调用，确保目录已加载并构建了产品 ID 到产品的映射。
 func (p *productCatalog) parseCatalog() []*pb.Product {
 	if reloadCatalog || len(p.catalog.Products) == 0 {
 		// 需要重载

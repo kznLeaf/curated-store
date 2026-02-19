@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"os"
 	"time"
@@ -74,24 +75,30 @@ func main() {
 	svc := new(frontendServer)
 
 	svcPort := port
+	// PORT 环境变量定义在k8s清单文件中。
 	if os.Getenv("PORT") != "" {
 		svcPort = os.Getenv("PORT")
 	}
-	_ = svcPort
-	// addr := os.Getenv("LISTEN_ADDR")
+	addr := os.Getenv("LISTEN_ADDR")
+	fmt.Printf("前端服务正在监听端口 %s, addr: %s\n", svcPort, addr)
 
 	mustMapEnv(&svc.productCatalogSvcAddr, "PRODUCT_CATALOG_SERVICE_ADDR")
 
+	// 利用上一步读取的服务地址，建立gRPC连接
 	mustConnGRPC(ctx, &svc.productCatalogSvcConn, svc.productCatalogSvcAddr)
 
 	baseUrl := os.Getenv("BASE_URL") // 该环境变量位于 kustomize/components/custom-base-url/kustomization.yaml
-	baseUrl = ""
+	baseUrl = "" // TODO 测试环境暂时设为空
 	// 设置路由规则和处理函数
 	r := mux.NewRouter()
-	r.HandleFunc(baseUrl + "/product/{id}", svc.productHandler).Methods(http.MethodGet, http.MethodHead) // 产品详情页 get
+	r.HandleFunc(baseUrl+"/product/{id}", svc.productHandler).Methods(http.MethodGet, http.MethodHead) // 产品详情页 get
+
 }
 
 // mustMapEnv 强制将环境变量映射到目标字符串指针
+// 这里的环境变量由k8s自动为Service创建，并且短横线被替换为下划线。
+// 例如，my-nginx服务会自动在 node 中设置环境变量 MY_NGINX_SERVICE_HOST 和 MY_NGINX_SERVICE_PORT。
+// 因此通过读取环境变量，就可以实现服务发现。这也是k8s的两种服务发现方式之一。
 func mustMapEnv(target *string, envKey string) {
 	v := os.Getenv(envKey)
 	if v == "" {
@@ -100,6 +107,8 @@ func mustMapEnv(target *string, envKey string) {
 	*target = v
 }
 
+// mustConnGRPC 强制建立 gRPC 连接。
+// 该函数会尝试连接指定地址的 gRPC 服务，如果连接成功，则将连接对象保存到 conn 指向的变量中。如果连接失败，函数会记录错误并调用 logrus.Fatalf 来终止程序运行。
 func mustConnGRPC(ctx context.Context, conn **grpc.ClientConn, addr string) {
 	var err error
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)

@@ -48,3 +48,15 @@ func (fe *frontendServer) GetProduct(ctx context.Context, id string) (*pb.Produc
 	return resp, nil
 }
 
+// SearchProducts 搜索产品，由前端服务调用
+func (fe *frontendServer) SearchProducts(ctx context.Context, query string) ([]*pb.Product, error) {
+	// 1. 利用注册好的gRPC连接，创建产品目录服务的客户端
+	catalogClient := pb.NewProductCatalogServiceClient(fe.productCatalogSvcConn)
+	// 2. 调用 SearchProducts 方法搜索产品
+	resp, err := catalogClient.SearchProducts(ctx, &pb.SearchProductsRequest{Query: query})
+	if err != nil {
+		return nil, err
+	}
+	// 3. 返回搜索结果
+	return resp.Results, nil
+}

@@ -9,6 +9,8 @@ import (
 	"time"
 
 	pb "github.com/kznLeaf/curated-store/src/productcatalogservice/genproto"
+	healthpb "google.golang.org/grpc/health/grpc_health_v1"
+
 
 	"github.com/sirupsen/logrus"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
@@ -40,13 +42,12 @@ func init() {
 }
 
 func main() {
-	// 确保就算
 	flag.Parse()
 
 	if os.Getenv("PORT") != "" {
 		port = os.Getenv("PORT")
 	}
-	log.Infof("starting grpc server at :%s", port)
+	log.Infof("[productcatalog]starting grpc server at :%s", port)
 	run(port)
 	select {}
 }
@@ -69,6 +70,7 @@ func run(port string) string {
 		log.Fatalf("could not parse product catalog: %v", err)
 	}
 	pb.RegisterProductCatalogServiceServer(srv, svc) // 将该服务的实例注册到gRPC服务器
+	healthpb.RegisterHealthServer(srv, svc) // 注册健康检查服务
 
 	go srv.Serve(listener)
 	return listener.Addr().String()
