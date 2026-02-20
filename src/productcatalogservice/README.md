@@ -64,8 +64,7 @@ skaffold run
 kubectl port-forward deployment/frontend 8080:8080
 ```
 
-然后就可以访问`http://localhost:8080/66VCHSJNUP`，测试三个API，查看调试日志：
-
+然后就可以访问`http://localhost:8080/66VCHSJNUP`，这会调用`handlers.go`中的`productHandler`，同时调用三个待测试的API,将结果输出到日志中。
 
 ```bash
 $ kubectl get pods
