@@ -24,11 +24,11 @@ func (p *productCatalog) Check(ctx context.Context, req *healthpb.HealthCheckReq
 
 // List 属于 HealthServer 接口的一部分，获取所有可用服务的非原子快照。
 func (p *productCatalog) List(ctx context.Context, req *healthpb.HealthListRequest) (*healthpb.HealthListResponse, error) {
-    // 简单的空实现
-    return &healthpb.HealthListResponse{}, nil
+	// 简单的空实现
+	return &healthpb.HealthListResponse{}, nil
 }
 
-// Watch 属于 HealthServer 接口的一部分，每当服务状态发生变化时，服务器都会发送一条新的消息。 
+// Watch 属于 HealthServer 接口的一部分，每当服务状态发生变化时，服务器都会发送一条新的消息。
 // TODO 实现以支持更细粒度的健康检查。
 func (p *productCatalog) Watch(req *healthpb.HealthCheckRequest, ws healthpb.Health_WatchServer) error {
 	return status.Errorf(codes.Unimplemented, "health check via Watch not implemented")
@@ -36,13 +36,14 @@ func (p *productCatalog) Watch(req *healthpb.HealthCheckRequest, ws healthpb.Hea
 
 // parseCatalog 解析产品目录。被 ListProducts 和 GetProduct 调用，确保目录已加载并构建了产品 ID 到产品的映射。
 func (p *productCatalog) parseCatalog() []*pb.Product {
-	if reloadCatalog || len(p.catalog.Products) == 0 {
-		// 需要重载
-		err := loadCatalog(&p.catalog)
-		if err != nil {
-			return []*pb.Product{}
+	if p.maps == nil || reloadCatalog || len(p.catalog.Products) == 0 {
+		// 如果目录为空或需要重载，先加载
+		if len(p.catalog.Products) == 0 || reloadCatalog {
+			if err := loadCatalog(&p.catalog); err != nil {
+				return []*pb.Product{}
+			}
 		}
-		// 构建产品 ID 到产品的映射
+		// 构建或重建产品 ID 到产品的映射
 		p.maps = make(map[string]*pb.Product)
 		for _, product := range p.catalog.Products {
 			p.maps[product.Id] = product
@@ -70,7 +71,7 @@ func (p *productCatalog) GetProduct(ctx context.Context, req *pb.GetProductReque
 }
 
 // 前端传来搜索的商品名称，调用这个函数进行匹配
-// TODO 也许可以用 ES 优化。目前采用的是遍历匹配的方式
+// TODO 也许可以用 ES 优化。目前采用的是遍历所有商品的名称和描述的方式
 // SearchProducts 搜索产品，由前端服务调用
 func (p *productCatalog) SearchProducts(ctx context.Context, req *pb.SearchProductsRequest) (*pb.SearchProductsResponse, error) {
 	time.Sleep(extraLatency)

@@ -24,13 +24,13 @@ func (fe *frontendServer) GetProducts(ctx context.Context) ([]*pb.Product, error
 
 	// 1. 利用注册好的gRPC连接，创建产品目录服务的客户端
 	catalogClient := pb.NewProductCatalogServiceClient(fe.productCatalogSvcConn)
-	
+
 	// 2. 调用 ListProducts 方法获取产品列表
 	resp, err := catalogClient.ListProducts(ctx, &pb.Empty{})
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// 3. 返回产品列表
 	return resp.Products, nil
 }

@@ -7,6 +7,8 @@ build:
   artifacts:
   - image: productcatalogservice # Kustomize（通过 Skaffold）通过 image 字段的值 来匹配配置文件和微服务。
     context: src/productcatalogservice
+  - image: frontend
+    context: src/frontend
   tagPolicy:
     gitCommit: {}
   local:

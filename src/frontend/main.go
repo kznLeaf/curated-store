@@ -20,29 +20,6 @@ import (
 type frontendServer struct {
 	productCatalogSvcAddr string
 	productCatalogSvcConn *grpc.ClientConn
-
-	currencySvcAddr string
-	currencySvcConn *grpc.ClientConn
-
-	cartSvcAddr string
-	cartSvcConn *grpc.ClientConn
-
-	recommendationSvcAddr string
-	recommendationSvcConn *grpc.ClientConn
-
-	checkoutSvcAddr string
-	checkoutSvcConn *grpc.ClientConn
-
-	shippingSvcAddr string
-	shippingSvcConn *grpc.ClientConn
-
-	adSvcAddr string
-	adSvcConn *grpc.ClientConn
-
-	collectorAddr string // 用于分布式追踪的收集器 的 地址 和 gRPC连接
-	collectorConn *grpc.ClientConn
-
-	shoppingAssistantSvcAddr string
 }
 
 const (
@@ -56,11 +33,11 @@ const (
 	cookieCurrency  = cookiePrefix + "currency"
 )
 
-func main() {
-	ctx := context.Background()
+var log *logrus.Logger
 
+func init() {
 	// 设置日志
-	log := logrus.New()
+	log = logrus.New()
 	log.Level = logrus.DebugLevel
 	log.Formatter = &logrus.JSONFormatter{
 		FieldMap: logrus.FieldMap{
@@ -71,28 +48,40 @@ func main() {
 		TimestampFormat: time.RFC3339Nano,
 	}
 	log.Out = os.Stdout
+}
+
+func main() {
+	ctx := context.Background()
 
 	svc := new(frontendServer)
 
-	svcPort := port
+	srvPort := port
 	// PORT 环境变量定义在k8s清单文件中。
 	if os.Getenv("PORT") != "" {
-		svcPort = os.Getenv("PORT")
+		srvPort = os.Getenv("PORT")
 	}
 	addr := os.Getenv("LISTEN_ADDR")
-	fmt.Printf("前端服务正在监听端口 %s, addr: %s\n", svcPort, addr)
+	log.Infof("前端服务正在监听端口 %s, addr: %s\n", srvPort, addr)
 
+	// 读取服务地址
 	mustMapEnv(&svc.productCatalogSvcAddr, "PRODUCT_CATALOG_SERVICE_ADDR")
 
 	// 利用上一步读取的服务地址，建立gRPC连接
 	mustConnGRPC(ctx, &svc.productCatalogSvcConn, svc.productCatalogSvcAddr)
 
 	baseUrl := os.Getenv("BASE_URL") // 该环境变量位于 kustomize/components/custom-base-url/kustomization.yaml
-	baseUrl = "" // TODO 测试环境暂时设为空
+	baseUrl = ""                     // TODO 测试环境暂时设为空
 	// 设置路由规则和处理函数
 	r := mux.NewRouter()
-	r.HandleFunc(baseUrl+"/product/{id}", svc.productHandler).Methods(http.MethodGet, http.MethodHead) // 产品详情页 get
+	r.HandleFunc(baseUrl+"/product/{id}", svc.productHandler).Methods(http.MethodGet, http.MethodHead)                // 产品详情页 get
+	r.HandleFunc(baseUrl+"/_healthz", func(w http.ResponseWriter, _ *http.Request) { fmt.Fprint(w, "[frontend]ok") }) // 健康检查
 
+	var handler http.Handler = r // Router实现了 http.Handler 接口
+
+	log.Infof("starting server on %s:%s", addr, srvPort)
+
+	// 启动 HTTP 服务器。传入handler，这样每次收到HTTP请求自动调用中间件链和路由规则
+	log.Fatal(http.ListenAndServe(addr+":"+srvPort, handler))
 }
 
 // mustMapEnv 强制将环境变量映射到目标字符串指针
