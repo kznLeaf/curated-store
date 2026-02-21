@@ -9,6 +9,8 @@ build:
     context: src/productcatalogservice
   - image: frontend
     context: src/frontend
+  - image: currencyservice
+    context: src/currencyservice
   tagPolicy:
     gitCommit: {}
   local:

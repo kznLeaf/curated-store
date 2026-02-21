@@ -388,6 +388,116 @@ func (x *SearchProductsResponse) GetResults() []*Product {
 	return nil
 }
 
+type GetSupportedCurrenciesResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// The 3-letter currency code defined in ISO 4217.
+	CurrencyCodes []string `protobuf:"bytes,1,rep,name=currency_codes,json=currencyCodes,proto3" json:"currency_codes,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetSupportedCurrenciesResponse) Reset() {
+	*x = GetSupportedCurrenciesResponse{}
+	mi := &file_demo_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetSupportedCurrenciesResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetSupportedCurrenciesResponse) ProtoMessage() {}
+
+func (x *GetSupportedCurrenciesResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_demo_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetSupportedCurrenciesResponse.ProtoReflect.Descriptor instead.
+func (*GetSupportedCurrenciesResponse) Descriptor() ([]byte, []int) {
+	return file_demo_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *GetSupportedCurrenciesResponse) GetCurrencyCodes() []string {
+	if x != nil {
+		return x.CurrencyCodes
+	}
+	return nil
+}
+
+// 封装货币转换请求，例如：
+//
+//	CurrencyConversionRequest {
+//	    from: {
+//	        currency_code: "USD",
+//	        units: 1,
+//	        nanos: 0
+//	    }
+//	    to_code: "EUR"
+//	}
+//
+// 表示将 1 美元转换为欧元
+type CurrencyConversionRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	From  *Money                 `protobuf:"bytes,1,opt,name=from,proto3" json:"from,omitempty"`
+	// The 3-letter currency code defined in ISO 4217.
+	ToCode        string `protobuf:"bytes,2,opt,name=to_code,json=toCode,proto3" json:"to_code,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CurrencyConversionRequest) Reset() {
+	*x = CurrencyConversionRequest{}
+	mi := &file_demo_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CurrencyConversionRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CurrencyConversionRequest) ProtoMessage() {}
+
+func (x *CurrencyConversionRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_demo_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CurrencyConversionRequest.ProtoReflect.Descriptor instead.
+func (*CurrencyConversionRequest) Descriptor() ([]byte, []int) {
+	return file_demo_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *CurrencyConversionRequest) GetFrom() *Money {
+	if x != nil {
+		return x.From
+	}
+	return nil
+}
+
+func (x *CurrencyConversionRequest) GetToCode() string {
+	if x != nil {
+		return x.ToCode
+	}
+	return ""
+}
+
 var File_demo_proto protoreflect.FileDescriptor
 
 const file_demo_proto_rawDesc = "" +
@@ -415,12 +525,20 @@ const file_demo_proto_rawDesc = "" +
 	"\x15SearchProductsRequest\x12\x14\n" +
 	"\x05query\x18\x01 \x01(\tR\x05query\"H\n" +
 	"\x16SearchProductsResponse\x12.\n" +
-	"\aresults\x18\x01 \x03(\v2\x14.hipstershop.ProductR\aresults2\x83\x02\n" +
+	"\aresults\x18\x01 \x03(\v2\x14.hipstershop.ProductR\aresults\"G\n" +
+	"\x1eGetSupportedCurrenciesResponse\x12%\n" +
+	"\x0ecurrency_codes\x18\x01 \x03(\tR\rcurrencyCodes\"\\\n" +
+	"\x19CurrencyConversionRequest\x12&\n" +
+	"\x04from\x18\x01 \x01(\v2\x12.hipstershop.MoneyR\x04from\x12\x17\n" +
+	"\ato_code\x18\x02 \x01(\tR\x06toCode2\x83\x02\n" +
 	"\x15ProductCatalogService\x12G\n" +
 	"\fListProducts\x12\x12.hipstershop.Empty\x1a!.hipstershop.ListProductsResponse\"\x00\x12D\n" +
 	"\n" +
 	"GetProduct\x12\x1e.hipstershop.GetProductRequest\x1a\x14.hipstershop.Product\"\x00\x12[\n" +
-	"\x0eSearchProducts\x12\".hipstershop.SearchProductsRequest\x1a#.hipstershop.SearchProductsResponse\"\x00B\x12Z\x10demo/hipstershopb\x06proto3"
+	"\x0eSearchProducts\x12\".hipstershop.SearchProductsRequest\x1a#.hipstershop.SearchProductsResponse\"\x002\xb7\x01\n" +
+	"\x0fCurrencyService\x12[\n" +
+	"\x16GetSupportedCurrencies\x12\x12.hipstershop.Empty\x1a+.hipstershop.GetSupportedCurrenciesResponse\"\x00\x12G\n" +
+	"\aConvert\x12&.hipstershop.CurrencyConversionRequest\x1a\x12.hipstershop.Money\"\x00B\x12Z\x10demo/hipstershopb\x06proto3"
 
 var (
 	file_demo_proto_rawDescOnce sync.Once
@@ -434,31 +552,38 @@ func file_demo_proto_rawDescGZIP() []byte {
 	return file_demo_proto_rawDescData
 }
 
-var file_demo_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
+var file_demo_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
 var file_demo_proto_goTypes = []any{
-	(*Empty)(nil),                  // 0: hipstershop.Empty
-	(*Money)(nil),                  // 1: hipstershop.Money
-	(*Product)(nil),                // 2: hipstershop.Product
-	(*ListProductsResponse)(nil),   // 3: hipstershop.ListProductsResponse
-	(*GetProductRequest)(nil),      // 4: hipstershop.GetProductRequest
-	(*SearchProductsRequest)(nil),  // 5: hipstershop.SearchProductsRequest
-	(*SearchProductsResponse)(nil), // 6: hipstershop.SearchProductsResponse
+	(*Empty)(nil),                          // 0: hipstershop.Empty
+	(*Money)(nil),                          // 1: hipstershop.Money
+	(*Product)(nil),                        // 2: hipstershop.Product
+	(*ListProductsResponse)(nil),           // 3: hipstershop.ListProductsResponse
+	(*GetProductRequest)(nil),              // 4: hipstershop.GetProductRequest
+	(*SearchProductsRequest)(nil),          // 5: hipstershop.SearchProductsRequest
+	(*SearchProductsResponse)(nil),         // 6: hipstershop.SearchProductsResponse
+	(*GetSupportedCurrenciesResponse)(nil), // 7: hipstershop.GetSupportedCurrenciesResponse
+	(*CurrencyConversionRequest)(nil),      // 8: hipstershop.CurrencyConversionRequest
 }
 var file_demo_proto_depIdxs = []int32{
 	1, // 0: hipstershop.Product.price_usd:type_name -> hipstershop.Money
 	2, // 1: hipstershop.ListProductsResponse.products:type_name -> hipstershop.Product
 	2, // 2: hipstershop.SearchProductsResponse.results:type_name -> hipstershop.Product
-	0, // 3: hipstershop.ProductCatalogService.ListProducts:input_type -> hipstershop.Empty
-	4, // 4: hipstershop.ProductCatalogService.GetProduct:input_type -> hipstershop.GetProductRequest
-	5, // 5: hipstershop.ProductCatalogService.SearchProducts:input_type -> hipstershop.SearchProductsRequest
-	3, // 6: hipstershop.ProductCatalogService.ListProducts:output_type -> hipstershop.ListProductsResponse
-	2, // 7: hipstershop.ProductCatalogService.GetProduct:output_type -> hipstershop.Product
-	6, // 8: hipstershop.ProductCatalogService.SearchProducts:output_type -> hipstershop.SearchProductsResponse
-	6, // [6:9] is the sub-list for method output_type
-	3, // [3:6] is the sub-list for method input_type
-	3, // [3:3] is the sub-list for extension type_name
-	3, // [3:3] is the sub-list for extension extendee
-	0, // [0:3] is the sub-list for field type_name
+	1, // 3: hipstershop.CurrencyConversionRequest.from:type_name -> hipstershop.Money
+	0, // 4: hipstershop.ProductCatalogService.ListProducts:input_type -> hipstershop.Empty
+	4, // 5: hipstershop.ProductCatalogService.GetProduct:input_type -> hipstershop.GetProductRequest
+	5, // 6: hipstershop.ProductCatalogService.SearchProducts:input_type -> hipstershop.SearchProductsRequest
+	0, // 7: hipstershop.CurrencyService.GetSupportedCurrencies:input_type -> hipstershop.Empty
+	8, // 8: hipstershop.CurrencyService.Convert:input_type -> hipstershop.CurrencyConversionRequest
+	3, // 9: hipstershop.ProductCatalogService.ListProducts:output_type -> hipstershop.ListProductsResponse
+	2, // 10: hipstershop.ProductCatalogService.GetProduct:output_type -> hipstershop.Product
+	6, // 11: hipstershop.ProductCatalogService.SearchProducts:output_type -> hipstershop.SearchProductsResponse
+	7, // 12: hipstershop.CurrencyService.GetSupportedCurrencies:output_type -> hipstershop.GetSupportedCurrenciesResponse
+	1, // 13: hipstershop.CurrencyService.Convert:output_type -> hipstershop.Money
+	9, // [9:14] is the sub-list for method output_type
+	4, // [4:9] is the sub-list for method input_type
+	4, // [4:4] is the sub-list for extension type_name
+	4, // [4:4] is the sub-list for extension extendee
+	0, // [0:4] is the sub-list for field type_name
 }
 
 func init() { file_demo_proto_init() }
@@ -472,9 +597,9 @@ func file_demo_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_demo_proto_rawDesc), len(file_demo_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   7,
+			NumMessages:   9,
 			NumExtensions: 0,
-			NumServices:   1,
+			NumServices:   2,
 		},
 		GoTypes:           file_demo_proto_goTypes,
 		DependencyIndexes: file_demo_proto_depIdxs,

@@ -20,6 +20,9 @@ import (
 type frontendServer struct {
 	productCatalogSvcAddr string
 	productCatalogSvcConn *grpc.ClientConn
+
+	currencySvcAddr string
+	currencySvcConn *grpc.ClientConn
 }
 
 const (
@@ -33,7 +36,10 @@ const (
 	cookieCurrency  = cookiePrefix + "currency"
 )
 
-var log *logrus.Logger
+var (
+	log     *logrus.Logger
+	baseUrl = ""
+)
 
 func init() {
 	// 设置日志
@@ -65,12 +71,14 @@ func main() {
 
 	// 读取服务地址
 	mustMapEnv(&svc.productCatalogSvcAddr, "PRODUCT_CATALOG_SERVICE_ADDR")
+	mustMapEnv(&svc.currencySvcAddr, "CURRENCY_SERVICE_ADDR")
 
 	// 利用上一步读取的服务地址，建立gRPC连接
 	mustConnGRPC(ctx, &svc.productCatalogSvcConn, svc.productCatalogSvcAddr)
+	mustConnGRPC(ctx, &svc.currencySvcConn, svc.currencySvcAddr)
 
-	baseUrl := os.Getenv("BASE_URL") // 该环境变量位于 kustomize/components/custom-base-url/kustomization.yaml
-	baseUrl = ""                     // TODO 测试环境暂时设为空
+	// baseUrl := os.Getenv("BASE_URL") // 该环境变量位于 kustomize/components/custom-base-url/kustomization.yaml
+
 	// 设置路由规则和处理函数
 	r := mux.NewRouter()
 	r.HandleFunc(baseUrl+"/product/{id}", svc.productHandler).Methods(http.MethodGet, http.MethodHead)                // 产品详情页 get
@@ -100,9 +108,8 @@ func mustMapEnv(target *string, envKey string) {
 // 该函数会尝试连接指定地址的 gRPC 服务，如果连接成功，则将连接对象保存到 conn 指向的变量中。如果连接失败，函数会记录错误并调用 logrus.Fatalf 来终止程序运行。
 func mustConnGRPC(ctx context.Context, conn **grpc.ClientConn, addr string) {
 	var err error
-	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
-	defer cancel()
 
+	// NewClient 立即返回，不需要设置超时。连接的建立和维护由 gRPC 库负责，库会自动处理连接的重试和恢复。
 	*conn, err = grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		logrus.Fatalf("无法连接到 gRPC 服务 %q: %v", addr, err)

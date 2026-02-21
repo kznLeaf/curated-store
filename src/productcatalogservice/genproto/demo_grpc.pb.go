@@ -195,3 +195,151 @@ var ProductCatalogService_ServiceDesc = grpc.ServiceDesc{
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "demo.proto",
 }
+
+const (
+	CurrencyService_GetSupportedCurrencies_FullMethodName = "/hipstershop.CurrencyService/GetSupportedCurrencies"
+	CurrencyService_Convert_FullMethodName                = "/hipstershop.CurrencyService/Convert"
+)
+
+// CurrencyServiceClient is the client API for CurrencyService service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+//
+// 和汇率有关的服务
+type CurrencyServiceClient interface {
+	// 获取支持的货币列表
+	GetSupportedCurrencies(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*GetSupportedCurrenciesResponse, error)
+	// 将一种货币转换为另一种货币
+	Convert(ctx context.Context, in *CurrencyConversionRequest, opts ...grpc.CallOption) (*Money, error)
+}
+
+type currencyServiceClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewCurrencyServiceClient(cc grpc.ClientConnInterface) CurrencyServiceClient {
+	return &currencyServiceClient{cc}
+}
+
+func (c *currencyServiceClient) GetSupportedCurrencies(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*GetSupportedCurrenciesResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetSupportedCurrenciesResponse)
+	err := c.cc.Invoke(ctx, CurrencyService_GetSupportedCurrencies_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *currencyServiceClient) Convert(ctx context.Context, in *CurrencyConversionRequest, opts ...grpc.CallOption) (*Money, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Money)
+	err := c.cc.Invoke(ctx, CurrencyService_Convert_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// CurrencyServiceServer is the server API for CurrencyService service.
+// All implementations must embed UnimplementedCurrencyServiceServer
+// for forward compatibility.
+//
+// 和汇率有关的服务
+type CurrencyServiceServer interface {
+	// 获取支持的货币列表
+	GetSupportedCurrencies(context.Context, *Empty) (*GetSupportedCurrenciesResponse, error)
+	// 将一种货币转换为另一种货币
+	Convert(context.Context, *CurrencyConversionRequest) (*Money, error)
+	mustEmbedUnimplementedCurrencyServiceServer()
+}
+
+// UnimplementedCurrencyServiceServer must be embedded to have
+// forward compatible implementations.
+//
+// NOTE: this should be embedded by value instead of pointer to avoid a nil
+// pointer dereference when methods are called.
+type UnimplementedCurrencyServiceServer struct{}
+
+func (UnimplementedCurrencyServiceServer) GetSupportedCurrencies(context.Context, *Empty) (*GetSupportedCurrenciesResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetSupportedCurrencies not implemented")
+}
+func (UnimplementedCurrencyServiceServer) Convert(context.Context, *CurrencyConversionRequest) (*Money, error) {
+	return nil, status.Error(codes.Unimplemented, "method Convert not implemented")
+}
+func (UnimplementedCurrencyServiceServer) mustEmbedUnimplementedCurrencyServiceServer() {}
+func (UnimplementedCurrencyServiceServer) testEmbeddedByValue()                         {}
+
+// UnsafeCurrencyServiceServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to CurrencyServiceServer will
+// result in compilation errors.
+type UnsafeCurrencyServiceServer interface {
+	mustEmbedUnimplementedCurrencyServiceServer()
+}
+
+func RegisterCurrencyServiceServer(s grpc.ServiceRegistrar, srv CurrencyServiceServer) {
+	// If the following call panics, it indicates UnimplementedCurrencyServiceServer was
+	// embedded by pointer and is nil.  This will cause panics if an
+	// unimplemented method is ever invoked, so we test this at initialization
+	// time to prevent it from happening at runtime later due to I/O.
+	if t, ok := srv.(interface{ testEmbeddedByValue() }); ok {
+		t.testEmbeddedByValue()
+	}
+	s.RegisterService(&CurrencyService_ServiceDesc, srv)
+}
+
+func _CurrencyService_GetSupportedCurrencies_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CurrencyServiceServer).GetSupportedCurrencies(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CurrencyService_GetSupportedCurrencies_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CurrencyServiceServer).GetSupportedCurrencies(ctx, req.(*Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CurrencyService_Convert_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CurrencyConversionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CurrencyServiceServer).Convert(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CurrencyService_Convert_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CurrencyServiceServer).Convert(ctx, req.(*CurrencyConversionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// CurrencyService_ServiceDesc is the grpc.ServiceDesc for CurrencyService service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var CurrencyService_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "hipstershop.CurrencyService",
+	HandlerType: (*CurrencyServiceServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "GetSupportedCurrencies",
+			Handler:    _CurrencyService_GetSupportedCurrencies_Handler,
+		},
+		{
+			MethodName: "Convert",
+			Handler:    _CurrencyService_Convert_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "demo.proto",
+}

@@ -58,3 +58,36 @@ message SearchProductsRequest {
 message SearchProductsResponse {
     repeated Product results = 1;
 }
+
+
+// -----------------Currency service-----------------
+
+// 和汇率有关的服务
+service CurrencyService {
+    // 获取支持的货币列表
+    rpc GetSupportedCurrencies(Empty) returns (GetSupportedCurrenciesResponse) {}
+    // 将一种货币转换为另一种货币
+    rpc Convert(CurrencyConversionRequest) returns (Money) {}
+}
+
+message GetSupportedCurrenciesResponse {
+    // The 3-letter currency code defined in ISO 4217.
+    repeated string currency_codes = 1;
+}
+
+// 封装货币转换请求，例如：
+// CurrencyConversionRequest {
+//     from: {
+//         currency_code: "USD",
+//         units: 1,
+//         nanos: 0
+//     }
+//     to_code: "EUR"
+// }
+// 表示将 1 美元转换为欧元
+message CurrencyConversionRequest {
+    Money from = 1;
+
+    // The 3-letter currency code defined in ISO 4217.
+    string to_code = 2;
+}

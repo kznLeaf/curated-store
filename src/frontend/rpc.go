@@ -6,6 +6,7 @@ import (
 )
 
 const (
+	// 该标志用在货币代码相同的情况下不再进行额外的RPC调用以转换货币。true表示优化
 	avoidNoopCurrencyConversionRPC = false
 )
 
@@ -59,4 +60,36 @@ func (fe *frontendServer) SearchProducts(ctx context.Context, query string) ([]*
 	}
 	// 3. 返回搜索结果
 	return resp.Results, nil
+}
+
+//////////////////currencyService//////////////////////////////
+
+// getCurrencies 获取支持的货币列表
+// 调用货币服务获取所有支持的货币代码，并与本地白名单进行过滤
+//
+// 参数:
+//
+//	ctx - 请求上下文，用于超时控制和取消
+//
+// 返回:
+//
+//	[]string - 过滤后的支持货币代码列表
+//	error - 如果调用失败返回错误
+func (fe *frontendServer) getCurrencies(ctx context.Context) ([]string, error) {
+	currencyClient := pb.NewCurrencyServiceClient(fe.currencySvcConn)
+	resp, err := currencyClient.GetSupportedCurrencies(ctx, &pb.Empty{})
+	if err != nil {
+		return nil, err
+	}
+	return resp.CurrencyCodes, nil
+}
+
+func (fe *frontendServer) convertCurrency(ctx context.Context, money *pb.Money, currency string) (*pb.Money, error) {
+	if avoidNoopCurrencyConversionRPC && money.GetCurrencyCode() == currency {
+		return money, nil
+	}
+	return pb.NewCurrencyServiceClient(fe.currencySvcConn).
+		Convert(ctx, &pb.CurrencyConversionRequest{
+			From:   money,
+			ToCode: currency})
 }

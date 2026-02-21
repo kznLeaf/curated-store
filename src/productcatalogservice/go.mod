@@ -3,6 +3,7 @@ module github.com/kznLeaf/curated-store/src/productcatalogservice
 go 1.24.0
 
 require (
+	github.com/golang/protobuf v1.5.4
 	github.com/sirupsen/logrus v1.9.4
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.64.0
 	google.golang.org/grpc v1.78.0

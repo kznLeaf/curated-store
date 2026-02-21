@@ -18,10 +18,10 @@ kind: Kustomization
 resources:
  - frontend.yaml
  - productcatalogservice.yaml
+ - currencyservice.yaml
 #  - adservice.yaml
 #  - cartservice.yaml
 #  - checkoutservice.yaml
-#  - currencyservice.yaml
 #  - emailservice.yaml
 # - loadgenerator.yaml # During development, the loadgenerator module inside skaffold.yaml will be used.
 #  - paymentservice.yaml

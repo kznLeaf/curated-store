@@ -38,7 +38,7 @@ WORKDIR /src
 COPY --from=builder /productcatalogservice ./server
 # 复制用于HTTPS请求验证的证书：
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt 
-COPY products.json .
+COPY currency_conversion.json .
 
 # 设置 Go 运行时行为：程序崩溃时只打印当前 goroutine 的堆栈，而非所有 goroutine（避免日志爆炸）
 # Definition of this variable is used by 'skaffold debug' to identify a golang binary.
@@ -46,5 +46,5 @@ COPY products.json .
 # See https://golang.org/pkg/runtime/
 ENV GOTRACEBACK=single
 
-EXPOSE 3550
+EXPOSE 7000
 ENTRYPOINT ["/src/server"]

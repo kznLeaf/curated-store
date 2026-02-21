@@ -109,16 +109,16 @@
             "categories": ["kitchen"]
         },
         {
-            "id": "6E92ZZZYFZ",
-            "name": "MyPicture",
-            "description": "Add a modern touch to your outfits with these sleek aviator sunglasses.",
-            "picture": "https://s21.ax1x.com/2025/09/18/pVhfYLD.png",
+            "id": "MAHOYOSSSS",
+            "name": "魔法使いの夜　オリジナルサウンドトラック",
+            "description": "『月姫』『Fate/stay night』を生み出した“TYPE-MOON”によるPCゲーム『魔法使いの夜』にオリジナル・サウンドトラック。劇伴曲に加え、話題のクリエイター集団『supercell』が手掛けたエンディングテーマなどを収録。",
+            "picture": "https://s41.ax1x.com/2026/01/23/pZglKpt.jpg",
             "priceUsd": {
                 "currencyCode": "USD",
-                "units": 800,
-                "nanos": 990000000
+                "units": 21,
+                "nanos": 470000000
             },
-            "categories": ["home"]
+            "categories": ["CD"]
         }
     ]
 }
