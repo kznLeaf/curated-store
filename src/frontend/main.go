@@ -81,8 +81,11 @@ func main() {
 
 	// 设置路由规则和处理函数
 	r := mux.NewRouter()
+	r.HandleFunc(baseUrl+"/", svc.homeHandler).Methods(http.MethodGet, http.MethodHead)                 // 首页 get
 	r.HandleFunc(baseUrl+"/product/{id}", svc.productHandler).Methods(http.MethodGet, http.MethodHead)                // 产品详情页 get
 	r.HandleFunc(baseUrl+"/_healthz", func(w http.ResponseWriter, _ *http.Request) { fmt.Fprint(w, "[frontend]ok") }) // 健康检查
+	r.HandleFunc(baseUrl + "/setCurrency", svc.setCurrencyHandler).Methods(http.MethodPost) // 切换货币
+
 
 	var handler http.Handler = r // Router实现了 http.Handler 接口
 

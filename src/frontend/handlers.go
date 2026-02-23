@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"strings"
@@ -12,6 +13,7 @@ import (
 	"github.com/gorilla/mux"
 	pb "github.com/kznLeaf/curated-store/src/frontend/genproto"
 	"github.com/sirupsen/logrus"
+	validator "github.com/kznLeaf/curated-store/src/frontend/validator"
 )
 
 var (
@@ -20,7 +22,7 @@ var (
 			"renderMoney":        renderMoney,
 			"renderCurrencyLogo": renderCurrencyLogo,
 		}).ParseGlob("templates/*.html")) // 解析所有 templates 目录下的 html 文件
-	plat             platformDetails
+	plat             *platformDetails
 	isCymbalBrand    = strings.ToLower(os.Getenv("CYMBAL_BRANDING")) == "true"
 	assistantEnabled = strings.ToLower(os.Getenv("ENABLE_ASSISTANT")) == "true"
 	frontendMessage  = strings.TrimSpace(os.Getenv("FRONTEND_MESSAGE"))
@@ -35,6 +37,100 @@ type ctxKeyLog struct{}
 // ctxKeySessionID 定义一个零内存占用的、强类型的键，value为 sessionID
 type ctxKeySessionID struct{}
 type ctxKeyRequestID struct{}
+
+func (fe *frontendServer) homeHandler(w http.ResponseWriter, r *http.Request) {
+	log.WithField("[homehandler]currency", currentCurrency(r)).Info("home")
+
+	currencies, err := fe.getCurrencies(r.Context())
+	if err != nil {
+		log.Infof("无法获取货币列表 %v", err)
+		renderHTTPError(log, r, w, errors.New("could not retrieve currencies"), http.StatusInternalServerError)
+		return
+	}
+
+	products, err := fe.GetProducts(r.Context())
+	if err != nil {
+		log.Infof("无法获取产品列表 %v", err)
+		renderHTTPError(log, r, w, errors.New("could not retrieve products"), http.StatusInternalServerError)
+		return
+	}
+
+	type productView struct {
+		Item  *pb.Product // Product (string)类型定义在 proto，包含一个Picture字段，用于显示产品图片
+		Price *pb.Money
+	}
+	ps := make([]productView, len(products))
+	for i, p := range products {
+		price, err := fe.convertCurrency(r.Context(), p.GetPriceUsd(), currentCurrency(r))
+		if err != nil {
+			log.Infof("转换货币错误: %v", err)
+			renderHTTPError(log, r, w, errors.New("无法转换货币"), http.StatusInternalServerError)
+			return
+		}
+		ps[i] = productView{p, price}
+	}
+
+	// 设置平台信息
+	var env = os.Getenv("ENV_PLATFORM") // 如果没有该环境变量，说明是local环境。GCP会设置该环境变量.
+	if env == "" || !stringinSlice(validEnvs, env) {
+		log.Infof("当前环境不属于支持的云平台")
+		env = "local"
+	}
+
+	addrs, err := net.LookupHost("metadata.google.internal.") // 查询域名的IP地址，只有内部的实例才能得到查询结果
+	if err == nil && len(addrs) >= 0 {
+		log.Debugf("Detected Google metadata server: %v, setting ENV_PLATFORM to GCP.", addrs)
+		env = "gcp"
+	}
+
+	log.Debugf("当前环境: %s", env)
+	plat = &platformDetails{}
+	plat.setPlatformDetails(strings.ToLower(env))
+
+	if err := templates.ExecuteTemplate(w, "home", injectCommonTemplateData(r, map[string]interface{}{
+		"show_currency": true,
+		"currencies":    currencies,
+		"products":      ps,
+		"banner_color":  os.Getenv("BANNER_COLOR"), // TODO 这个有什么用 illustrates canary deployments
+	})); err != nil {
+		log.Error(err)
+	}
+}
+
+var validEnvs = []string{"local", "gcp", "azure", "aws", "onprem", "alibaba"}
+
+// stringinSlice 判断字符串 val 是否在字符串 slice 切片中
+func stringinSlice(slice []string, val string) bool {
+	for _, item := range slice {
+		if item == val {
+			return true
+		}
+	}
+	return false
+}
+
+func (plat *platformDetails) setPlatformDetails(env string) {
+	switch env {
+	case "aws":
+		plat.provider = "AWS"
+		plat.css = "aws-platform"
+	case "onprem":
+		plat.provider = "On-Premises"
+		plat.css = "onprem-platform"
+	case "azure":
+		plat.provider = "Azure"
+		plat.css = "azure-platform"
+	case "gcp":
+		plat.provider = "Google Cloud"
+		plat.css = "gcp-platform"
+	case "alibaba":
+		plat.provider = "Alibaba Cloud"
+		plat.css = "alibaba-platform"
+	default:
+		plat.provider = "local"
+		plat.css = "local"
+	}
+}
 
 func (fe *frontendServer) productHandler(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
@@ -74,12 +170,41 @@ func (fe *frontendServer) productHandler(w http.ResponseWriter, r *http.Request)
 
 	// 渲染 product.html 模板，把填充后的页面写入 r
 	if err := templates.ExecuteTemplate(w, "product", injectCommonTemplateData(r, map[string]interface{}{
-		"product":    wrappedProduct,
-		"currencies": currencies,
+		"show_currency": true,
+		"product":       wrappedProduct,
+		"currencies":    currencies,
 	})); err != nil {
 		log.Println(err)
 	}
+}
 
+// setCurrencyHandler 实现用户手动选择货币种类。请求路径：/setCurrency POST. 详见 header.html: 73
+func (fe *frontendServer) setCurrencyHandler(w http.ResponseWriter, r *http.Request) {
+	cur := r.FormValue("currency_code") // 自动从请求中提取名为 currency_code 的参数，无需关心请求方式是POST还是GET
+	payload := validator.SetCurrencyPayload{Currency: cur} // 构造一个 SetCurrencyPayload 对象，包含用户选择的货币代码
+	// 下面执行校验
+	if err := payload.Validate(); err != nil {
+		log.Infof("无效的货币代码 %q: %v", cur, err)
+		renderHTTPError(log, r, w, fmt.Errorf("无效的货币代码 %q", cur), http.StatusBadRequest)
+		return
+	}
+	log.WithField("当前货币", payload.Currency).WithField("原货币", currentCurrency(r)).Debug("正在切换货币种类")
+
+	// 已经确认货币有效，把用户选择的货币代码写入 Cookie，设置过期时间
+	http.SetCookie(w, &http.Cookie{
+		Name: cookieCurrency,
+		Value: payload.Currency,
+		MaxAge: cookieMaxAge,
+	})
+	
+	// 设置货币（Set Currency）是一个 Action（动作），用户提交后，你不仅要设置 Cookie，通常还要让页面跳转回原来的地方（Referer）或者首页，否则用户会看到一个空白页面。
+	referer := r.Referer() // 获取 Referer 头，得到用户之前所在的页面 URL. 等价于 r.Header.Get("referer")
+	if referer == "" {
+		referer = baseUrl + "/" // 如果没有 Referer 头，就跳转到首页
+	}
+	http.Redirect(w, r, referer, http.StatusSeeOther) // 重定向用户回原来的页面。这里用303 See Other 状态码，表示请求已经被处理，用户应该使用 【GET】 方法访问 Referer URL 来查看结果。
+	// 之所以不用 302 Found，是因为 302 在 HTTP/1.0 中定义为临时重定向，但在 HTTP/1.1 中被重新定义为【根据请求方法决定重定向方式】，如果原请求是 POST，302 会被一些浏览器错误地处理为【继续使用 POST 方法访问 Referer URL】
+	// 这可能导致问题。而 303 See Other 明确表示无论原请求是什么方法，用户都应该使用 GET 方法访问 Referer URL，这样更符合我们的需求。
 }
 
 // 渲染相关的函数
@@ -153,6 +278,8 @@ func sessionID(r *http.Request) string {
 }
 
 // currentCurrency 从请求的 Cookie 中提取用户的货币,如果没有设置则返回JPY
+//
+// c, _ := r.Cookie(cookieCurrency)
 func currentCurrency(r *http.Request) string {
 	c, _ := r.Cookie(cookieCurrency)
 	if c != nil {
