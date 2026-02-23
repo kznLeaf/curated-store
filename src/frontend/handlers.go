@@ -12,8 +12,8 @@ import (
 
 	"github.com/gorilla/mux"
 	pb "github.com/kznLeaf/curated-store/src/frontend/genproto"
-	"github.com/sirupsen/logrus"
 	validator "github.com/kznLeaf/curated-store/src/frontend/validator"
+	"github.com/sirupsen/logrus"
 )
 
 var (
@@ -91,7 +91,7 @@ func (fe *frontendServer) homeHandler(w http.ResponseWriter, r *http.Request) {
 		"show_currency": true,
 		"currencies":    currencies,
 		"products":      ps,
-		"banner_color":  os.Getenv("BANNER_COLOR"), // TODO 这个有什么用 illustrates canary deployments
+		"banner_color":  os.Getenv("BANNER_COLOR"), // TODO recommendations ad
 	})); err != nil {
 		log.Error(err)
 	}
@@ -173,6 +173,7 @@ func (fe *frontendServer) productHandler(w http.ResponseWriter, r *http.Request)
 		"show_currency": true,
 		"product":       wrappedProduct,
 		"currencies":    currencies,
+		// TODO packagingInfo cart_size recommendations ad 待补充
 	})); err != nil {
 		log.Println(err)
 	}
@@ -180,7 +181,7 @@ func (fe *frontendServer) productHandler(w http.ResponseWriter, r *http.Request)
 
 // setCurrencyHandler 实现用户手动选择货币种类。请求路径：/setCurrency POST. 详见 header.html: 73
 func (fe *frontendServer) setCurrencyHandler(w http.ResponseWriter, r *http.Request) {
-	cur := r.FormValue("currency_code") // 自动从请求中提取名为 currency_code 的参数，无需关心请求方式是POST还是GET
+	cur := r.FormValue("currency_code")                    // 自动从请求中提取名为 currency_code 的参数，无需关心请求方式是POST还是GET
 	payload := validator.SetCurrencyPayload{Currency: cur} // 构造一个 SetCurrencyPayload 对象，包含用户选择的货币代码
 	// 下面执行校验
 	if err := payload.Validate(); err != nil {
@@ -192,11 +193,11 @@ func (fe *frontendServer) setCurrencyHandler(w http.ResponseWriter, r *http.Requ
 
 	// 已经确认货币有效，把用户选择的货币代码写入 Cookie，设置过期时间
 	http.SetCookie(w, &http.Cookie{
-		Name: cookieCurrency,
-		Value: payload.Currency,
+		Name:   cookieCurrency,
+		Value:  payload.Currency,
 		MaxAge: cookieMaxAge,
 	})
-	
+
 	// 设置货币（Set Currency）是一个 Action（动作），用户提交后，你不仅要设置 Cookie，通常还要让页面跳转回原来的地方（Referer）或者首页，否则用户会看到一个空白页面。
 	referer := r.Referer() // 获取 Referer 头，得到用户之前所在的页面 URL. 等价于 r.Header.Get("referer")
 	if referer == "" {
@@ -205,6 +206,20 @@ func (fe *frontendServer) setCurrencyHandler(w http.ResponseWriter, r *http.Requ
 	http.Redirect(w, r, referer, http.StatusSeeOther) // 重定向用户回原来的页面。这里用303 See Other 状态码，表示请求已经被处理，用户应该使用 【GET】 方法访问 Referer URL 来查看结果。
 	// 之所以不用 302 Found，是因为 302 在 HTTP/1.0 中定义为临时重定向，但在 HTTP/1.1 中被重新定义为【根据请求方法决定重定向方式】，如果原请求是 POST，302 会被一些浏览器错误地处理为【继续使用 POST 方法访问 Referer URL】
 	// 这可能导致问题。而 303 See Other 明确表示无论原请求是什么方法，用户都应该使用 GET 方法访问 Referer URL，这样更符合我们的需求。
+}
+
+// viewCartHandler
+// TODO viewCartHandler待完善
+func (fe *frontendServer) viewCartHandler(w http.ResponseWriter, r *http.Request) {
+	cart := []*pb.CartItem{
+		{ProductId: "MAHOYOSSSS", Quantity: 111},
+		{ProductId: "6E92ZMYYFZ", Quantity: 1222},
+	}
+	shippingCost, err := fe.getShippingQuote(r.Context(), cart, "JPY")
+	log.Debugf("getShippingQuote的执行结果 %v", shippingCost)
+	if err != nil {
+		log.Errorf("[shippingcost]: error %v", err)
+	}
 }
 
 // 渲染相关的函数
@@ -269,6 +284,7 @@ func injectCommonTemplateData(r *http.Request, payload map[string]interface{}) m
 
 ///////////////////////////////////////////////
 
+// sessionID 返回请求头的 Cookie 中的 sessionID
 func sessionID(r *http.Request) string {
 	v := r.Context().Value(ctxKeySessionID{})
 	if v == nil {
@@ -277,9 +293,9 @@ func sessionID(r *http.Request) string {
 	return v.(string)
 }
 
-// currentCurrency 从请求的 Cookie 中提取用户的货币,如果没有设置则返回JPY
-//
-// c, _ := r.Cookie(cookieCurrency)
+// currentCurrency 从请求的 Cookie 中提取用户的货币,如果没有设置则返回默认货币。
+// setCurrencyHandler 这里将用户选择的货币放入了Cookie
+// 提取：c, _ := r.Cookie(cookieCurrency)
 func currentCurrency(r *http.Request) string {
 	c, _ := r.Cookie(cookieCurrency)
 	if c != nil {

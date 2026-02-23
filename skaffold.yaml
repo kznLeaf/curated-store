@@ -11,6 +11,8 @@ build:
     context: src/frontend
   - image: currencyservice
     context: src/currencyservice
+  - image: shippingservice
+    context: src/shippingservice
   tagPolicy:
     gitCommit: {}
   local:

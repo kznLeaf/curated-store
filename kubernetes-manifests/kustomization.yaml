@@ -19,6 +19,7 @@ resources:
  - frontend.yaml
  - productcatalogservice.yaml
  - currencyservice.yaml
+ - shippingservice.yaml
 #  - adservice.yaml
 #  - cartservice.yaml
 #  - checkoutservice.yaml
@@ -26,7 +27,6 @@ resources:
 # - loadgenerator.yaml # During development, the loadgenerator module inside skaffold.yaml will be used.
 #  - paymentservice.yaml
 #  - recommendationservice.yaml
-#  - shippingservice.yaml
 
 # components:
 # - ../kustomize/components/cymbal-branding
@@ -39,3 +39,4 @@ resources:
 # - ../kustomize/components/container-images-tag
 # - ../kustomize/components/container-images-tag-suffix
 # - ../kustomize/components/container-images-registry
+

@@ -25,7 +25,7 @@ func loadCatalogFromLocalFile(catalog *pb.ListProductsResponse) error {
 	}
 
 	// 把结果读取到 catalog 结构体中
-    if err = protojson.Unmarshal(data, catalog); err != nil {
+	if err = protojson.Unmarshal(data, catalog); err != nil {
 		log.Error("解析 products.json 文件失败:", err)
 		return err
 	}

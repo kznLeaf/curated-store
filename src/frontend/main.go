@@ -23,6 +23,9 @@ type frontendServer struct {
 
 	currencySvcAddr string
 	currencySvcConn *grpc.ClientConn
+
+	shippingSvcAddr string
+	shippingSvcConn *grpc.ClientConn
 }
 
 const (
@@ -72,20 +75,22 @@ func main() {
 	// 读取服务地址
 	mustMapEnv(&svc.productCatalogSvcAddr, "PRODUCT_CATALOG_SERVICE_ADDR")
 	mustMapEnv(&svc.currencySvcAddr, "CURRENCY_SERVICE_ADDR")
+	mustMapEnv(&svc.shippingSvcAddr, "SHIPPING_SERVICE_ADDR")
 
 	// 利用上一步读取的服务地址，建立gRPC连接
 	mustConnGRPC(ctx, &svc.productCatalogSvcConn, svc.productCatalogSvcAddr)
 	mustConnGRPC(ctx, &svc.currencySvcConn, svc.currencySvcAddr)
+	mustConnGRPC(ctx, &svc.shippingSvcConn, svc.shippingSvcAddr)
 
 	// baseUrl := os.Getenv("BASE_URL") // 该环境变量位于 kustomize/components/custom-base-url/kustomization.yaml
 
 	// 设置路由规则和处理函数
 	r := mux.NewRouter()
-	r.HandleFunc(baseUrl+"/", svc.homeHandler).Methods(http.MethodGet, http.MethodHead)                 // 首页 get
+	r.HandleFunc(baseUrl+"/", svc.homeHandler).Methods(http.MethodGet, http.MethodHead)                               // 首页 get
 	r.HandleFunc(baseUrl+"/product/{id}", svc.productHandler).Methods(http.MethodGet, http.MethodHead)                // 产品详情页 get
 	r.HandleFunc(baseUrl+"/_healthz", func(w http.ResponseWriter, _ *http.Request) { fmt.Fprint(w, "[frontend]ok") }) // 健康检查
-	r.HandleFunc(baseUrl + "/setCurrency", svc.setCurrencyHandler).Methods(http.MethodPost) // 切换货币
-
+	r.HandleFunc(baseUrl+"/setCurrency", svc.setCurrencyHandler).Methods(http.MethodPost)                             // 用户手动切换货币
+	r.HandleFunc(baseUrl+"/cart", svc.viewCartHandler).Methods(http.MethodGet, http.MethodHead)
 
 	var handler http.Handler = r // Router实现了 http.Handler 接口
 

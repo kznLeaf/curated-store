@@ -1,7 +1,11 @@
 package main
 
+// 本文件用于调用gRPC服务的API,并且封装成更方便使用的函数。handlers.go中会调用这些函数来获取数据并渲染页面。
+
 import (
 	"context"
+	"fmt"
+
 	pb "github.com/kznLeaf/curated-store/src/frontend/genproto"
 )
 
@@ -92,4 +96,22 @@ func (fe *frontendServer) convertCurrency(ctx context.Context, money *pb.Money, 
 		Convert(ctx, &pb.CurrencyConversionRequest{
 			From:   money,
 			ToCode: currency})
+}
+
+// getShippingQuote 调用 shippingservice 获取运费报价，货币单位是传入的 currency
+func (fe *frontendServer) getShippingQuote(ctx context.Context, items []*pb.CartItem, currency string) (*pb.Money, error) {
+	shippingClient := pb.NewShippingServiceClient(fe.shippingSvcConn)
+	resp, err := shippingClient.GetQuote(ctx, &pb.GetQuoteRequest{
+		Items:   items,
+		Address: nil, // TODO 目前没有地址信息，包括 getShippingQuote 的实现中实际上也没有用到收货地址，后续再完善。
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	localized, err := fe.convertCurrency(ctx, resp.CostUsd, currency)
+	if err != nil {
+		return nil, fmt.Errorf("[getShippingQuote]: %w", err)
+	}
+	return localized, nil
 }

@@ -17,7 +17,7 @@ func init() {
 
 // loadDeploymentDetails 采集元数据，包括：
 //
-//   - HOSTNAME: Pod 的主机名  
+//   - HOSTNAME: Pod 的主机名
 //   - CLUSTERNAME: Pod 所在的 GKE 集群名称
 //   - ZONE: Pod 所在的 GCP 区域和可用区
 func loadDeploymentDetails() {

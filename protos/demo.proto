@@ -91,3 +91,41 @@ message CurrencyConversionRequest {
     // The 3-letter currency code defined in ISO 4217.
     string to_code = 2;
 }
+
+// ---------------Shipping Service----------
+
+message Address {
+    string street_address = 1;
+    string city = 2;
+    string state = 3;
+    string country = 4;
+    int32 zip_code = 5;
+}
+
+message CartItem {
+    string product_id = 1;
+    int32  quantity = 2;
+}
+
+service ShippingService {
+    rpc GetQuote(GetQuoteRequest) returns (GetQuoteResponse) {} // 获取运费报价，具体实现见 shippingservice/main.go 文件
+    rpc ShipOrder(ShipOrderRequest) returns (ShipOrderResponse) {} // 发货，具体实现见 shippingservice/main.go 文件
+}
+
+message GetQuoteRequest {
+    Address address = 1; // 收货地址
+    repeated CartItem items = 2; // 购物车中的商品列表
+}
+
+message GetQuoteResponse {
+    Money cost_usd = 1;
+}
+
+message ShipOrderRequest {
+    Address address = 1; // 收货地址
+    repeated CartItem items = 2; // 购物车中的商品列表
+}
+
+message ShipOrderResponse {
+    string tracking_id = 1; // 物流跟踪号
+}
