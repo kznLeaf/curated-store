@@ -133,7 +133,8 @@ message ShipOrderResponse {
 // -------------Payment service-----------------
 
 service PaymentService {
-    rpc Charge(ChargeRequest) returns (ChargeResponse) {} // 处理支付，具体实现见 paymentservice/main.go 文件
+    // Charge 属于 PaymentService 的核心方法，处理 ChargeRequest 请求，调用 charge 函数进行信用卡验证和扣款，并返回 ChargeResponse 或错误。
+    rpc Charge(ChargeRequest) returns (ChargeResponse) {}
 }
 
 message CreditCardInfo {

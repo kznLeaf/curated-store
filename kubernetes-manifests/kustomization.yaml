@@ -20,12 +20,12 @@ resources:
  - productcatalogservice.yaml
  - currencyservice.yaml
  - shippingservice.yaml
+ - paymentservice.yaml
 #  - adservice.yaml
 #  - cartservice.yaml
 #  - checkoutservice.yaml
 #  - emailservice.yaml
 # - loadgenerator.yaml # During development, the loadgenerator module inside skaffold.yaml will be used.
-#  - paymentservice.yaml
 #  - recommendationservice.yaml
 
 # components:

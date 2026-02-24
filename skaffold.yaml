@@ -13,6 +13,8 @@ build:
     context: src/currencyservice
   - image: shippingservice
     context: src/shippingservice
+  - image: paymentservice
+    context: src/paymentservice
   tagPolicy:
     gitCommit: {}
   local:
