@@ -818,6 +818,170 @@ func (x *ShipOrderResponse) GetTrackingId() string {
 	return ""
 }
 
+type CreditCardInfo struct {
+	state                     protoimpl.MessageState `protogen:"open.v1"`
+	CreditCardNumber          string                 `protobuf:"bytes,1,opt,name=credit_card_number,json=creditCardNumber,proto3" json:"credit_card_number,omitempty"`
+	CreditCardCvv             int32                  `protobuf:"varint,2,opt,name=credit_card_cvv,json=creditCardCvv,proto3" json:"credit_card_cvv,omitempty"`
+	CreditCardExpirationYear  int32                  `protobuf:"varint,3,opt,name=credit_card_expiration_year,json=creditCardExpirationYear,proto3" json:"credit_card_expiration_year,omitempty"`
+	CreditCardExpirationMonth int32                  `protobuf:"varint,4,opt,name=credit_card_expiration_month,json=creditCardExpirationMonth,proto3" json:"credit_card_expiration_month,omitempty"`
+	unknownFields             protoimpl.UnknownFields
+	sizeCache                 protoimpl.SizeCache
+}
+
+func (x *CreditCardInfo) Reset() {
+	*x = CreditCardInfo{}
+	mi := &file_demo_proto_msgTypes[15]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreditCardInfo) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreditCardInfo) ProtoMessage() {}
+
+func (x *CreditCardInfo) ProtoReflect() protoreflect.Message {
+	mi := &file_demo_proto_msgTypes[15]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreditCardInfo.ProtoReflect.Descriptor instead.
+func (*CreditCardInfo) Descriptor() ([]byte, []int) {
+	return file_demo_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *CreditCardInfo) GetCreditCardNumber() string {
+	if x != nil {
+		return x.CreditCardNumber
+	}
+	return ""
+}
+
+func (x *CreditCardInfo) GetCreditCardCvv() int32 {
+	if x != nil {
+		return x.CreditCardCvv
+	}
+	return 0
+}
+
+func (x *CreditCardInfo) GetCreditCardExpirationYear() int32 {
+	if x != nil {
+		return x.CreditCardExpirationYear
+	}
+	return 0
+}
+
+func (x *CreditCardInfo) GetCreditCardExpirationMonth() int32 {
+	if x != nil {
+		return x.CreditCardExpirationMonth
+	}
+	return 0
+}
+
+type ChargeRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Amount        *Money                 `protobuf:"bytes,1,opt,name=amount,proto3" json:"amount,omitempty"`                           // 支付金额
+	CreditCard    *CreditCardInfo        `protobuf:"bytes,2,opt,name=credit_card,json=creditCard,proto3" json:"credit_card,omitempty"` // 信用卡信息
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ChargeRequest) Reset() {
+	*x = ChargeRequest{}
+	mi := &file_demo_proto_msgTypes[16]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ChargeRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ChargeRequest) ProtoMessage() {}
+
+func (x *ChargeRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_demo_proto_msgTypes[16]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ChargeRequest.ProtoReflect.Descriptor instead.
+func (*ChargeRequest) Descriptor() ([]byte, []int) {
+	return file_demo_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *ChargeRequest) GetAmount() *Money {
+	if x != nil {
+		return x.Amount
+	}
+	return nil
+}
+
+func (x *ChargeRequest) GetCreditCard() *CreditCardInfo {
+	if x != nil {
+		return x.CreditCard
+	}
+	return nil
+}
+
+type ChargeResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	TransactionId string                 `protobuf:"bytes,1,opt,name=transaction_id,json=transactionId,proto3" json:"transaction_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ChargeResponse) Reset() {
+	*x = ChargeResponse{}
+	mi := &file_demo_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ChargeResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ChargeResponse) ProtoMessage() {}
+
+func (x *ChargeResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_demo_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ChargeResponse.ProtoReflect.Descriptor instead.
+func (*ChargeResponse) Descriptor() ([]byte, []int) {
+	return file_demo_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *ChargeResponse) GetTransactionId() string {
+	if x != nil {
+		return x.TransactionId
+	}
+	return ""
+}
+
 var File_demo_proto protoreflect.FileDescriptor
 
 const file_demo_proto_rawDesc = "" +
@@ -871,7 +1035,18 @@ const file_demo_proto_rawDesc = "" +
 	"\x05items\x18\x02 \x03(\v2\x15.hipstershop.CartItemR\x05items\"4\n" +
 	"\x11ShipOrderResponse\x12\x1f\n" +
 	"\vtracking_id\x18\x01 \x01(\tR\n" +
-	"trackingId2\x83\x02\n" +
+	"trackingId\"\xe6\x01\n" +
+	"\x0eCreditCardInfo\x12,\n" +
+	"\x12credit_card_number\x18\x01 \x01(\tR\x10creditCardNumber\x12&\n" +
+	"\x0fcredit_card_cvv\x18\x02 \x01(\x05R\rcreditCardCvv\x12=\n" +
+	"\x1bcredit_card_expiration_year\x18\x03 \x01(\x05R\x18creditCardExpirationYear\x12?\n" +
+	"\x1ccredit_card_expiration_month\x18\x04 \x01(\x05R\x19creditCardExpirationMonth\"y\n" +
+	"\rChargeRequest\x12*\n" +
+	"\x06amount\x18\x01 \x01(\v2\x12.hipstershop.MoneyR\x06amount\x12<\n" +
+	"\vcredit_card\x18\x02 \x01(\v2\x1b.hipstershop.CreditCardInfoR\n" +
+	"creditCard\"7\n" +
+	"\x0eChargeResponse\x12%\n" +
+	"\x0etransaction_id\x18\x01 \x01(\tR\rtransactionId2\x83\x02\n" +
 	"\x15ProductCatalogService\x12G\n" +
 	"\fListProducts\x12\x12.hipstershop.Empty\x1a!.hipstershop.ListProductsResponse\"\x00\x12D\n" +
 	"\n" +
@@ -882,7 +1057,9 @@ const file_demo_proto_rawDesc = "" +
 	"\aConvert\x12&.hipstershop.CurrencyConversionRequest\x1a\x12.hipstershop.Money\"\x002\xaa\x01\n" +
 	"\x0fShippingService\x12I\n" +
 	"\bGetQuote\x12\x1c.hipstershop.GetQuoteRequest\x1a\x1d.hipstershop.GetQuoteResponse\"\x00\x12L\n" +
-	"\tShipOrder\x12\x1d.hipstershop.ShipOrderRequest\x1a\x1e.hipstershop.ShipOrderResponse\"\x00B\x12Z\x10demo/hipstershopb\x06proto3"
+	"\tShipOrder\x12\x1d.hipstershop.ShipOrderRequest\x1a\x1e.hipstershop.ShipOrderResponse\"\x002U\n" +
+	"\x0ePaymentService\x12C\n" +
+	"\x06Charge\x12\x1a.hipstershop.ChargeRequest\x1a\x1b.hipstershop.ChargeResponse\"\x00B\x12Z\x10demo/hipstershopb\x06proto3"
 
 var (
 	file_demo_proto_rawDescOnce sync.Once
@@ -896,7 +1073,7 @@ func file_demo_proto_rawDescGZIP() []byte {
 	return file_demo_proto_rawDescData
 }
 
-var file_demo_proto_msgTypes = make([]protoimpl.MessageInfo, 15)
+var file_demo_proto_msgTypes = make([]protoimpl.MessageInfo, 18)
 var file_demo_proto_goTypes = []any{
 	(*Empty)(nil),                          // 0: hipstershop.Empty
 	(*Money)(nil),                          // 1: hipstershop.Money
@@ -913,6 +1090,9 @@ var file_demo_proto_goTypes = []any{
 	(*GetQuoteResponse)(nil),               // 12: hipstershop.GetQuoteResponse
 	(*ShipOrderRequest)(nil),               // 13: hipstershop.ShipOrderRequest
 	(*ShipOrderResponse)(nil),              // 14: hipstershop.ShipOrderResponse
+	(*CreditCardInfo)(nil),                 // 15: hipstershop.CreditCardInfo
+	(*ChargeRequest)(nil),                  // 16: hipstershop.ChargeRequest
+	(*ChargeResponse)(nil),                 // 17: hipstershop.ChargeResponse
 }
 var file_demo_proto_depIdxs = []int32{
 	1,  // 0: hipstershop.Product.price_usd:type_name -> hipstershop.Money
@@ -924,25 +1104,29 @@ var file_demo_proto_depIdxs = []int32{
 	1,  // 6: hipstershop.GetQuoteResponse.cost_usd:type_name -> hipstershop.Money
 	9,  // 7: hipstershop.ShipOrderRequest.address:type_name -> hipstershop.Address
 	10, // 8: hipstershop.ShipOrderRequest.items:type_name -> hipstershop.CartItem
-	0,  // 9: hipstershop.ProductCatalogService.ListProducts:input_type -> hipstershop.Empty
-	4,  // 10: hipstershop.ProductCatalogService.GetProduct:input_type -> hipstershop.GetProductRequest
-	5,  // 11: hipstershop.ProductCatalogService.SearchProducts:input_type -> hipstershop.SearchProductsRequest
-	0,  // 12: hipstershop.CurrencyService.GetSupportedCurrencies:input_type -> hipstershop.Empty
-	8,  // 13: hipstershop.CurrencyService.Convert:input_type -> hipstershop.CurrencyConversionRequest
-	11, // 14: hipstershop.ShippingService.GetQuote:input_type -> hipstershop.GetQuoteRequest
-	13, // 15: hipstershop.ShippingService.ShipOrder:input_type -> hipstershop.ShipOrderRequest
-	3,  // 16: hipstershop.ProductCatalogService.ListProducts:output_type -> hipstershop.ListProductsResponse
-	2,  // 17: hipstershop.ProductCatalogService.GetProduct:output_type -> hipstershop.Product
-	6,  // 18: hipstershop.ProductCatalogService.SearchProducts:output_type -> hipstershop.SearchProductsResponse
-	7,  // 19: hipstershop.CurrencyService.GetSupportedCurrencies:output_type -> hipstershop.GetSupportedCurrenciesResponse
-	1,  // 20: hipstershop.CurrencyService.Convert:output_type -> hipstershop.Money
-	12, // 21: hipstershop.ShippingService.GetQuote:output_type -> hipstershop.GetQuoteResponse
-	14, // 22: hipstershop.ShippingService.ShipOrder:output_type -> hipstershop.ShipOrderResponse
-	16, // [16:23] is the sub-list for method output_type
-	9,  // [9:16] is the sub-list for method input_type
-	9,  // [9:9] is the sub-list for extension type_name
-	9,  // [9:9] is the sub-list for extension extendee
-	0,  // [0:9] is the sub-list for field type_name
+	1,  // 9: hipstershop.ChargeRequest.amount:type_name -> hipstershop.Money
+	15, // 10: hipstershop.ChargeRequest.credit_card:type_name -> hipstershop.CreditCardInfo
+	0,  // 11: hipstershop.ProductCatalogService.ListProducts:input_type -> hipstershop.Empty
+	4,  // 12: hipstershop.ProductCatalogService.GetProduct:input_type -> hipstershop.GetProductRequest
+	5,  // 13: hipstershop.ProductCatalogService.SearchProducts:input_type -> hipstershop.SearchProductsRequest
+	0,  // 14: hipstershop.CurrencyService.GetSupportedCurrencies:input_type -> hipstershop.Empty
+	8,  // 15: hipstershop.CurrencyService.Convert:input_type -> hipstershop.CurrencyConversionRequest
+	11, // 16: hipstershop.ShippingService.GetQuote:input_type -> hipstershop.GetQuoteRequest
+	13, // 17: hipstershop.ShippingService.ShipOrder:input_type -> hipstershop.ShipOrderRequest
+	16, // 18: hipstershop.PaymentService.Charge:input_type -> hipstershop.ChargeRequest
+	3,  // 19: hipstershop.ProductCatalogService.ListProducts:output_type -> hipstershop.ListProductsResponse
+	2,  // 20: hipstershop.ProductCatalogService.GetProduct:output_type -> hipstershop.Product
+	6,  // 21: hipstershop.ProductCatalogService.SearchProducts:output_type -> hipstershop.SearchProductsResponse
+	7,  // 22: hipstershop.CurrencyService.GetSupportedCurrencies:output_type -> hipstershop.GetSupportedCurrenciesResponse
+	1,  // 23: hipstershop.CurrencyService.Convert:output_type -> hipstershop.Money
+	12, // 24: hipstershop.ShippingService.GetQuote:output_type -> hipstershop.GetQuoteResponse
+	14, // 25: hipstershop.ShippingService.ShipOrder:output_type -> hipstershop.ShipOrderResponse
+	17, // 26: hipstershop.PaymentService.Charge:output_type -> hipstershop.ChargeResponse
+	19, // [19:27] is the sub-list for method output_type
+	11, // [11:19] is the sub-list for method input_type
+	11, // [11:11] is the sub-list for extension type_name
+	11, // [11:11] is the sub-list for extension extendee
+	0,  // [0:11] is the sub-list for field type_name
 }
 
 func init() { file_demo_proto_init() }
@@ -956,9 +1140,9 @@ func file_demo_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_demo_proto_rawDesc), len(file_demo_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   15,
+			NumMessages:   18,
 			NumExtensions: 0,
-			NumServices:   3,
+			NumServices:   4,
 		},
 		GoTypes:           file_demo_proto_goTypes,
 		DependencyIndexes: file_demo_proto_depIdxs,

@@ -129,3 +129,25 @@ message ShipOrderRequest {
 message ShipOrderResponse {
     string tracking_id = 1; // 物流跟踪号
 }
+
+// -------------Payment service-----------------
+
+service PaymentService {
+    rpc Charge(ChargeRequest) returns (ChargeResponse) {} // 处理支付，具体实现见 paymentservice/main.go 文件
+}
+
+message CreditCardInfo {
+    string credit_card_number = 1;
+    int32 credit_card_cvv = 2;
+    int32 credit_card_expiration_year = 3;
+    int32 credit_card_expiration_month = 4;
+}
+
+message ChargeRequest {
+    Money amount = 1; // 支付金额
+    CreditCardInfo credit_card = 2; // 信用卡信息
+}
+
+message ChargeResponse {
+    string transaction_id = 1;
+}
