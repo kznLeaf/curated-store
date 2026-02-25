@@ -492,6 +492,7 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type PaymentServiceClient interface {
+	// Charge 属于 PaymentService 的核心方法，处理 ChargeRequest 请求，调用 charge 函数进行信用卡验证和扣款，并返回 ChargeResponse 或错误。
 	Charge(ctx context.Context, in *ChargeRequest, opts ...grpc.CallOption) (*ChargeResponse, error)
 }
 
@@ -517,6 +518,7 @@ func (c *paymentServiceClient) Charge(ctx context.Context, in *ChargeRequest, op
 // All implementations must embed UnimplementedPaymentServiceServer
 // for forward compatibility.
 type PaymentServiceServer interface {
+	// Charge 属于 PaymentService 的核心方法，处理 ChargeRequest 请求，调用 charge 函数进行信用卡验证和扣款，并返回 ChargeResponse 或错误。
 	Charge(context.Context, *ChargeRequest) (*ChargeResponse, error)
 	mustEmbedUnimplementedPaymentServiceServer()
 }
@@ -580,6 +582,108 @@ var PaymentService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Charge",
 			Handler:    _PaymentService_Charge_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "demo.proto",
+}
+
+const (
+	AdService_GetAds_FullMethodName = "/hipstershop.AdService/GetAds"
+)
+
+// AdServiceClient is the client API for AdService service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+type AdServiceClient interface {
+	GetAds(ctx context.Context, in *AdRequest, opts ...grpc.CallOption) (*AdResponse, error)
+}
+
+type adServiceClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewAdServiceClient(cc grpc.ClientConnInterface) AdServiceClient {
+	return &adServiceClient{cc}
+}
+
+func (c *adServiceClient) GetAds(ctx context.Context, in *AdRequest, opts ...grpc.CallOption) (*AdResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AdResponse)
+	err := c.cc.Invoke(ctx, AdService_GetAds_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// AdServiceServer is the server API for AdService service.
+// All implementations must embed UnimplementedAdServiceServer
+// for forward compatibility.
+type AdServiceServer interface {
+	GetAds(context.Context, *AdRequest) (*AdResponse, error)
+	mustEmbedUnimplementedAdServiceServer()
+}
+
+// UnimplementedAdServiceServer must be embedded to have
+// forward compatible implementations.
+//
+// NOTE: this should be embedded by value instead of pointer to avoid a nil
+// pointer dereference when methods are called.
+type UnimplementedAdServiceServer struct{}
+
+func (UnimplementedAdServiceServer) GetAds(context.Context, *AdRequest) (*AdResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetAds not implemented")
+}
+func (UnimplementedAdServiceServer) mustEmbedUnimplementedAdServiceServer() {}
+func (UnimplementedAdServiceServer) testEmbeddedByValue()                   {}
+
+// UnsafeAdServiceServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to AdServiceServer will
+// result in compilation errors.
+type UnsafeAdServiceServer interface {
+	mustEmbedUnimplementedAdServiceServer()
+}
+
+func RegisterAdServiceServer(s grpc.ServiceRegistrar, srv AdServiceServer) {
+	// If the following call panics, it indicates UnimplementedAdServiceServer was
+	// embedded by pointer and is nil.  This will cause panics if an
+	// unimplemented method is ever invoked, so we test this at initialization
+	// time to prevent it from happening at runtime later due to I/O.
+	if t, ok := srv.(interface{ testEmbeddedByValue() }); ok {
+		t.testEmbeddedByValue()
+	}
+	s.RegisterService(&AdService_ServiceDesc, srv)
+}
+
+func _AdService_GetAds_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AdRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AdServiceServer).GetAds(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AdService_GetAds_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AdServiceServer).GetAds(ctx, req.(*AdRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// AdService_ServiceDesc is the grpc.ServiceDesc for AdService service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var AdService_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "hipstershop.AdService",
+	HandlerType: (*AdServiceServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "GetAds",
+			Handler:    _AdService_GetAds_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

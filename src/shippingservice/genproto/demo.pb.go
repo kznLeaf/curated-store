@@ -982,6 +982,149 @@ func (x *ChargeResponse) GetTransactionId() string {
 	return ""
 }
 
+type AdRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// List of important key words from the current page describing the context.
+	ContextKeys   []string `protobuf:"bytes,1,rep,name=context_keys,json=contextKeys,proto3" json:"context_keys,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AdRequest) Reset() {
+	*x = AdRequest{}
+	mi := &file_demo_proto_msgTypes[18]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AdRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AdRequest) ProtoMessage() {}
+
+func (x *AdRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_demo_proto_msgTypes[18]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AdRequest.ProtoReflect.Descriptor instead.
+func (*AdRequest) Descriptor() ([]byte, []int) {
+	return file_demo_proto_rawDescGZIP(), []int{18}
+}
+
+func (x *AdRequest) GetContextKeys() []string {
+	if x != nil {
+		return x.ContextKeys
+	}
+	return nil
+}
+
+type AdResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Ads           []*Ad                  `protobuf:"bytes,1,rep,name=ads,proto3" json:"ads,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AdResponse) Reset() {
+	*x = AdResponse{}
+	mi := &file_demo_proto_msgTypes[19]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AdResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AdResponse) ProtoMessage() {}
+
+func (x *AdResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_demo_proto_msgTypes[19]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AdResponse.ProtoReflect.Descriptor instead.
+func (*AdResponse) Descriptor() ([]byte, []int) {
+	return file_demo_proto_rawDescGZIP(), []int{19}
+}
+
+func (x *AdResponse) GetAds() []*Ad {
+	if x != nil {
+		return x.Ads
+	}
+	return nil
+}
+
+type Ad struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// url to redirect to when an ad is clicked.
+	RedirectUrl string `protobuf:"bytes,1,opt,name=redirect_url,json=redirectUrl,proto3" json:"redirect_url,omitempty"`
+	// short advertisement text to display.
+	Text          string `protobuf:"bytes,2,opt,name=text,proto3" json:"text,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Ad) Reset() {
+	*x = Ad{}
+	mi := &file_demo_proto_msgTypes[20]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Ad) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Ad) ProtoMessage() {}
+
+func (x *Ad) ProtoReflect() protoreflect.Message {
+	mi := &file_demo_proto_msgTypes[20]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Ad.ProtoReflect.Descriptor instead.
+func (*Ad) Descriptor() ([]byte, []int) {
+	return file_demo_proto_rawDescGZIP(), []int{20}
+}
+
+func (x *Ad) GetRedirectUrl() string {
+	if x != nil {
+		return x.RedirectUrl
+	}
+	return ""
+}
+
+func (x *Ad) GetText() string {
+	if x != nil {
+		return x.Text
+	}
+	return ""
+}
+
 var File_demo_proto protoreflect.FileDescriptor
 
 const file_demo_proto_rawDesc = "" +
@@ -1046,7 +1189,15 @@ const file_demo_proto_rawDesc = "" +
 	"\vcredit_card\x18\x02 \x01(\v2\x1b.hipstershop.CreditCardInfoR\n" +
 	"creditCard\"7\n" +
 	"\x0eChargeResponse\x12%\n" +
-	"\x0etransaction_id\x18\x01 \x01(\tR\rtransactionId2\x83\x02\n" +
+	"\x0etransaction_id\x18\x01 \x01(\tR\rtransactionId\".\n" +
+	"\tAdRequest\x12!\n" +
+	"\fcontext_keys\x18\x01 \x03(\tR\vcontextKeys\"/\n" +
+	"\n" +
+	"AdResponse\x12!\n" +
+	"\x03ads\x18\x01 \x03(\v2\x0f.hipstershop.AdR\x03ads\";\n" +
+	"\x02Ad\x12!\n" +
+	"\fredirect_url\x18\x01 \x01(\tR\vredirectUrl\x12\x12\n" +
+	"\x04text\x18\x02 \x01(\tR\x04text2\x83\x02\n" +
 	"\x15ProductCatalogService\x12G\n" +
 	"\fListProducts\x12\x12.hipstershop.Empty\x1a!.hipstershop.ListProductsResponse\"\x00\x12D\n" +
 	"\n" +
@@ -1059,7 +1210,9 @@ const file_demo_proto_rawDesc = "" +
 	"\bGetQuote\x12\x1c.hipstershop.GetQuoteRequest\x1a\x1d.hipstershop.GetQuoteResponse\"\x00\x12L\n" +
 	"\tShipOrder\x12\x1d.hipstershop.ShipOrderRequest\x1a\x1e.hipstershop.ShipOrderResponse\"\x002U\n" +
 	"\x0ePaymentService\x12C\n" +
-	"\x06Charge\x12\x1a.hipstershop.ChargeRequest\x1a\x1b.hipstershop.ChargeResponse\"\x00B\x12Z\x10demo/hipstershopb\x06proto3"
+	"\x06Charge\x12\x1a.hipstershop.ChargeRequest\x1a\x1b.hipstershop.ChargeResponse\"\x002H\n" +
+	"\tAdService\x12;\n" +
+	"\x06GetAds\x12\x16.hipstershop.AdRequest\x1a\x17.hipstershop.AdResponse\"\x00B\x12Z\x10demo/hipstershopb\x06proto3"
 
 var (
 	file_demo_proto_rawDescOnce sync.Once
@@ -1073,7 +1226,7 @@ func file_demo_proto_rawDescGZIP() []byte {
 	return file_demo_proto_rawDescData
 }
 
-var file_demo_proto_msgTypes = make([]protoimpl.MessageInfo, 18)
+var file_demo_proto_msgTypes = make([]protoimpl.MessageInfo, 21)
 var file_demo_proto_goTypes = []any{
 	(*Empty)(nil),                          // 0: hipstershop.Empty
 	(*Money)(nil),                          // 1: hipstershop.Money
@@ -1093,6 +1246,9 @@ var file_demo_proto_goTypes = []any{
 	(*CreditCardInfo)(nil),                 // 15: hipstershop.CreditCardInfo
 	(*ChargeRequest)(nil),                  // 16: hipstershop.ChargeRequest
 	(*ChargeResponse)(nil),                 // 17: hipstershop.ChargeResponse
+	(*AdRequest)(nil),                      // 18: hipstershop.AdRequest
+	(*AdResponse)(nil),                     // 19: hipstershop.AdResponse
+	(*Ad)(nil),                             // 20: hipstershop.Ad
 }
 var file_demo_proto_depIdxs = []int32{
 	1,  // 0: hipstershop.Product.price_usd:type_name -> hipstershop.Money
@@ -1106,27 +1262,30 @@ var file_demo_proto_depIdxs = []int32{
 	10, // 8: hipstershop.ShipOrderRequest.items:type_name -> hipstershop.CartItem
 	1,  // 9: hipstershop.ChargeRequest.amount:type_name -> hipstershop.Money
 	15, // 10: hipstershop.ChargeRequest.credit_card:type_name -> hipstershop.CreditCardInfo
-	0,  // 11: hipstershop.ProductCatalogService.ListProducts:input_type -> hipstershop.Empty
-	4,  // 12: hipstershop.ProductCatalogService.GetProduct:input_type -> hipstershop.GetProductRequest
-	5,  // 13: hipstershop.ProductCatalogService.SearchProducts:input_type -> hipstershop.SearchProductsRequest
-	0,  // 14: hipstershop.CurrencyService.GetSupportedCurrencies:input_type -> hipstershop.Empty
-	8,  // 15: hipstershop.CurrencyService.Convert:input_type -> hipstershop.CurrencyConversionRequest
-	11, // 16: hipstershop.ShippingService.GetQuote:input_type -> hipstershop.GetQuoteRequest
-	13, // 17: hipstershop.ShippingService.ShipOrder:input_type -> hipstershop.ShipOrderRequest
-	16, // 18: hipstershop.PaymentService.Charge:input_type -> hipstershop.ChargeRequest
-	3,  // 19: hipstershop.ProductCatalogService.ListProducts:output_type -> hipstershop.ListProductsResponse
-	2,  // 20: hipstershop.ProductCatalogService.GetProduct:output_type -> hipstershop.Product
-	6,  // 21: hipstershop.ProductCatalogService.SearchProducts:output_type -> hipstershop.SearchProductsResponse
-	7,  // 22: hipstershop.CurrencyService.GetSupportedCurrencies:output_type -> hipstershop.GetSupportedCurrenciesResponse
-	1,  // 23: hipstershop.CurrencyService.Convert:output_type -> hipstershop.Money
-	12, // 24: hipstershop.ShippingService.GetQuote:output_type -> hipstershop.GetQuoteResponse
-	14, // 25: hipstershop.ShippingService.ShipOrder:output_type -> hipstershop.ShipOrderResponse
-	17, // 26: hipstershop.PaymentService.Charge:output_type -> hipstershop.ChargeResponse
-	19, // [19:27] is the sub-list for method output_type
-	11, // [11:19] is the sub-list for method input_type
-	11, // [11:11] is the sub-list for extension type_name
-	11, // [11:11] is the sub-list for extension extendee
-	0,  // [0:11] is the sub-list for field type_name
+	20, // 11: hipstershop.AdResponse.ads:type_name -> hipstershop.Ad
+	0,  // 12: hipstershop.ProductCatalogService.ListProducts:input_type -> hipstershop.Empty
+	4,  // 13: hipstershop.ProductCatalogService.GetProduct:input_type -> hipstershop.GetProductRequest
+	5,  // 14: hipstershop.ProductCatalogService.SearchProducts:input_type -> hipstershop.SearchProductsRequest
+	0,  // 15: hipstershop.CurrencyService.GetSupportedCurrencies:input_type -> hipstershop.Empty
+	8,  // 16: hipstershop.CurrencyService.Convert:input_type -> hipstershop.CurrencyConversionRequest
+	11, // 17: hipstershop.ShippingService.GetQuote:input_type -> hipstershop.GetQuoteRequest
+	13, // 18: hipstershop.ShippingService.ShipOrder:input_type -> hipstershop.ShipOrderRequest
+	16, // 19: hipstershop.PaymentService.Charge:input_type -> hipstershop.ChargeRequest
+	18, // 20: hipstershop.AdService.GetAds:input_type -> hipstershop.AdRequest
+	3,  // 21: hipstershop.ProductCatalogService.ListProducts:output_type -> hipstershop.ListProductsResponse
+	2,  // 22: hipstershop.ProductCatalogService.GetProduct:output_type -> hipstershop.Product
+	6,  // 23: hipstershop.ProductCatalogService.SearchProducts:output_type -> hipstershop.SearchProductsResponse
+	7,  // 24: hipstershop.CurrencyService.GetSupportedCurrencies:output_type -> hipstershop.GetSupportedCurrenciesResponse
+	1,  // 25: hipstershop.CurrencyService.Convert:output_type -> hipstershop.Money
+	12, // 26: hipstershop.ShippingService.GetQuote:output_type -> hipstershop.GetQuoteResponse
+	14, // 27: hipstershop.ShippingService.ShipOrder:output_type -> hipstershop.ShipOrderResponse
+	17, // 28: hipstershop.PaymentService.Charge:output_type -> hipstershop.ChargeResponse
+	19, // 29: hipstershop.AdService.GetAds:output_type -> hipstershop.AdResponse
+	21, // [21:30] is the sub-list for method output_type
+	12, // [12:21] is the sub-list for method input_type
+	12, // [12:12] is the sub-list for extension type_name
+	12, // [12:12] is the sub-list for extension extendee
+	0,  // [0:12] is the sub-list for field type_name
 }
 
 func init() { file_demo_proto_init() }
@@ -1140,9 +1299,9 @@ func file_demo_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_demo_proto_rawDesc), len(file_demo_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   18,
+			NumMessages:   21,
 			NumExtensions: 0,
-			NumServices:   4,
+			NumServices:   5,
 		},
 		GoTypes:           file_demo_proto_goTypes,
 		DependencyIndexes: file_demo_proto_depIdxs,

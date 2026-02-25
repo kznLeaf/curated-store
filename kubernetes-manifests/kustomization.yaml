@@ -21,7 +21,7 @@ resources:
  - currencyservice.yaml
  - shippingservice.yaml
  - paymentservice.yaml
-#  - adservice.yaml
+ - adservice.yaml
 #  - cartservice.yaml
 #  - checkoutservice.yaml
 #  - emailservice.yaml

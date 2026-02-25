@@ -5,6 +5,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"time"
 
 	pb "github.com/kznLeaf/curated-store/src/frontend/genproto"
 )
@@ -114,4 +115,14 @@ func (fe *frontendServer) getShippingQuote(ctx context.Context, items []*pb.Cart
 		return nil, fmt.Errorf("[getShippingQuote]: %w", err)
 	}
 	return localized, nil
+}
+
+// getAd 调用 adservice 获取广告
+func (fe *frontendServer) getAd(ctx context.Context, ctxKeys []string) ([]*pb.Ad, error) {
+	ctx, cancel := context.WithTimeout(ctx, time.Millisecond*100)
+	defer cancel()
+	resp, err := pb.NewAdServiceClient(fe.adSvcConn).GetAds(ctx, &pb.AdRequest{
+		ContextKeys: ctxKeys,
+	})
+	return resp.GetAds(), err
 }

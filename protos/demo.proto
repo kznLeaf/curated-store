@@ -152,3 +152,26 @@ message ChargeRequest {
 message ChargeResponse {
     string transaction_id = 1;
 }
+
+// ------------Ad service------------------
+
+service AdService {
+    rpc GetAds(AdRequest) returns (AdResponse) {}
+}
+
+message AdRequest {
+    // List of important key words from the current page describing the context.
+    repeated string context_keys = 1;
+}
+
+message AdResponse {
+    repeated Ad ads = 1;
+}
+
+message Ad {
+    // url to redirect to when an ad is clicked.
+    string redirect_url = 1;
+
+    // short advertisement text to display.
+    string text = 2;
+}

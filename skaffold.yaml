@@ -15,6 +15,8 @@ build:
     context: src/shippingservice
   - image: paymentservice
     context: src/paymentservice
+  - image: adservice
+    context: src/adservice
   tagPolicy:
     gitCommit: {}
   local:

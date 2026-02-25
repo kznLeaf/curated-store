@@ -27,12 +27,12 @@ func TestLuhnCheck(t *testing.T) {
 		{"random digits", "1234567890123456", false},
 
 		// ── 边界情况 ──
-		{"too short 12-digit", "411111111111", false},   // len < 13
+		{"too short 12-digit", "411111111111", false}, // len < 13
 		{"exactly 13-digit valid", "4222222222222", true},
 		{"empty string", "", false},
 		{"only spaces", "    ", false},
 		{"non-numeric chars only", "abcd-efgh", false},
-		{"mixed valid digits with letters", "4111abc1111111111", false}, 
+		{"mixed valid digits with letters", "4111abc1111111111", false},
 	}
 
 	for _, tt := range tests {

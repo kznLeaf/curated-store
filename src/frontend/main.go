@@ -26,6 +26,9 @@ type frontendServer struct {
 
 	shippingSvcAddr string
 	shippingSvcConn *grpc.ClientConn
+
+	adSvcAddr string
+	adSvcConn *grpc.ClientConn
 }
 
 const (
@@ -76,11 +79,13 @@ func main() {
 	mustMapEnv(&svc.productCatalogSvcAddr, "PRODUCT_CATALOG_SERVICE_ADDR")
 	mustMapEnv(&svc.currencySvcAddr, "CURRENCY_SERVICE_ADDR")
 	mustMapEnv(&svc.shippingSvcAddr, "SHIPPING_SERVICE_ADDR")
+	mustMapEnv(&svc.adSvcAddr, "AD_SERVICE_ADDR")
 
 	// 利用上一步读取的服务地址，建立gRPC连接
 	mustConnGRPC(ctx, &svc.productCatalogSvcConn, svc.productCatalogSvcAddr)
 	mustConnGRPC(ctx, &svc.currencySvcConn, svc.currencySvcAddr)
 	mustConnGRPC(ctx, &svc.shippingSvcConn, svc.shippingSvcAddr)
+	mustConnGRPC(ctx, &svc.adSvcConn, svc.adSvcAddr)
 
 	// baseUrl := os.Getenv("BASE_URL") // 该环境变量位于 kustomize/components/custom-base-url/kustomization.yaml
 

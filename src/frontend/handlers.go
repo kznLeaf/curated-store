@@ -1,8 +1,10 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"math/rand"
 	"net"
 	"net/http"
 	"os"
@@ -91,7 +93,8 @@ func (fe *frontendServer) homeHandler(w http.ResponseWriter, r *http.Request) {
 		"show_currency": true,
 		"currencies":    currencies,
 		"products":      ps,
-		"banner_color":  os.Getenv("BANNER_COLOR"), // TODO recommendations ad
+		"banner_color":  os.Getenv("BANNER_COLOR"),                 // TODO recommendations ad
+		"ad":            fe.chooseAd(r.Context(), []string{}, log), // TODO 目前实际adservice上并没有使用上下文关键字(传入一个空数组)，后续可以根据用户行为传入相关关键字来获取更精准的广告
 	})); err != nil {
 		log.Error(err)
 	}
@@ -302,4 +305,17 @@ func currentCurrency(r *http.Request) string {
 		return c.Value
 	}
 	return "JPY"
+}
+
+// chooseAd 从获取到的广告列表中随机选择一个广告返回给模版渲染
+func (fe *frontendServer) chooseAd(ctx context.Context, ctxKeys []string, log logrus.FieldLogger) *pb.Ad {
+	ads, err := fe.getAd(ctx, ctxKeys)
+	if err != nil {
+		log.Errorf("[chooseAd]无法获取广告: %v", err)
+		return nil
+	}
+
+    res := ads[rand.Intn(len(ads))]
+	log.Debugf("[chooseAd]从 %d 个广告中选择了广告: %v", len(ads), res)
+	return res
 }
