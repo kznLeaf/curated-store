@@ -94,7 +94,7 @@ func (fe *frontendServer) homeHandler(w http.ResponseWriter, r *http.Request) {
 		"currencies":    currencies,
 		"products":      ps,
 		"banner_color":  os.Getenv("BANNER_COLOR"),                 // TODO recommendations ad
-		"ad":            fe.chooseAd(r.Context(), []string{}, log), // TODO 目前实际adservice上并没有使用上下文关键字(传入一个空数组)，后续可以根据用户行为传入相关关键字来获取更精准的广告
+		"ad":            nil, // home.html 里完全没有调用 {{ template "text_ad" }} 的代码，这里实际上是一个无效传入。
 	})); err != nil {
 		log.Error(err)
 	}
@@ -112,6 +112,7 @@ func stringinSlice(slice []string, val string) bool {
 	return false
 }
 
+// setPlatformDetails 用于渲染首页左侧的 platform-flag 元素，在 homehandler 完成赋值，后续plat被传入injectCommonTemplateData
 func (plat *platformDetails) setPlatformDetails(env string) {
 	switch env {
 	case "aws":
@@ -173,6 +174,7 @@ func (fe *frontendServer) productHandler(w http.ResponseWriter, r *http.Request)
 
 	// 渲染 product.html 模板，把填充后的页面写入 r
 	if err := templates.ExecuteTemplate(w, "product", injectCommonTemplateData(r, map[string]interface{}{
+		"ad":              fe.chooseAd(r.Context(), product.Categories, log),
 		"show_currency": true,
 		"product":       wrappedProduct,
 		"currencies":    currencies,
