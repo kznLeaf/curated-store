@@ -22,11 +22,11 @@ resources:
  - shippingservice.yaml
  - paymentservice.yaml
  - adservice.yaml
+ - recommendationservice.yaml
 #  - cartservice.yaml
 #  - checkoutservice.yaml
 #  - emailservice.yaml
 # - loadgenerator.yaml # During development, the loadgenerator module inside skaffold.yaml will be used.
-#  - recommendationservice.yaml
 
 # components:
 # - ../kustomize/components/cymbal-branding

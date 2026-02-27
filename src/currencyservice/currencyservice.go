@@ -103,7 +103,6 @@ func (s *currencyService) List(ctx context.Context, req *healthpb.HealthListRequ
 }
 
 // Watch 属于 HealthServer 接口的一部分，每当服务状态发生变化时，服务器都会发送一条新的消息。
-// TODO 实现以支持更细粒度的健康检查。
 func (s *currencyService) Watch(req *healthpb.HealthCheckRequest, ws healthpb.Health_WatchServer) error {
 	return status.Errorf(codes.Unimplemented, "health check via Watch not implemented")
 }

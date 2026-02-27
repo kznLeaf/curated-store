@@ -689,3 +689,111 @@ var AdService_ServiceDesc = grpc.ServiceDesc{
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "demo.proto",
 }
+
+const (
+	RecommendationService_ListRecommendations_FullMethodName = "/hipstershop.RecommendationService/ListRecommendations"
+)
+
+// RecommendationServiceClient is the client API for RecommendationService service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+//
+// 推荐服务
+type RecommendationServiceClient interface {
+	// 根据用户 ID 和商品 ID 列表，返回推荐的商品 ID 列表
+	ListRecommendations(ctx context.Context, in *ListRecommendationsRequest, opts ...grpc.CallOption) (*ListRecommendationsResponse, error)
+}
+
+type recommendationServiceClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewRecommendationServiceClient(cc grpc.ClientConnInterface) RecommendationServiceClient {
+	return &recommendationServiceClient{cc}
+}
+
+func (c *recommendationServiceClient) ListRecommendations(ctx context.Context, in *ListRecommendationsRequest, opts ...grpc.CallOption) (*ListRecommendationsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListRecommendationsResponse)
+	err := c.cc.Invoke(ctx, RecommendationService_ListRecommendations_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// RecommendationServiceServer is the server API for RecommendationService service.
+// All implementations must embed UnimplementedRecommendationServiceServer
+// for forward compatibility.
+//
+// 推荐服务
+type RecommendationServiceServer interface {
+	// 根据用户 ID 和商品 ID 列表，返回推荐的商品 ID 列表
+	ListRecommendations(context.Context, *ListRecommendationsRequest) (*ListRecommendationsResponse, error)
+	mustEmbedUnimplementedRecommendationServiceServer()
+}
+
+// UnimplementedRecommendationServiceServer must be embedded to have
+// forward compatible implementations.
+//
+// NOTE: this should be embedded by value instead of pointer to avoid a nil
+// pointer dereference when methods are called.
+type UnimplementedRecommendationServiceServer struct{}
+
+func (UnimplementedRecommendationServiceServer) ListRecommendations(context.Context, *ListRecommendationsRequest) (*ListRecommendationsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListRecommendations not implemented")
+}
+func (UnimplementedRecommendationServiceServer) mustEmbedUnimplementedRecommendationServiceServer() {}
+func (UnimplementedRecommendationServiceServer) testEmbeddedByValue()                               {}
+
+// UnsafeRecommendationServiceServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to RecommendationServiceServer will
+// result in compilation errors.
+type UnsafeRecommendationServiceServer interface {
+	mustEmbedUnimplementedRecommendationServiceServer()
+}
+
+func RegisterRecommendationServiceServer(s grpc.ServiceRegistrar, srv RecommendationServiceServer) {
+	// If the following call panics, it indicates UnimplementedRecommendationServiceServer was
+	// embedded by pointer and is nil.  This will cause panics if an
+	// unimplemented method is ever invoked, so we test this at initialization
+	// time to prevent it from happening at runtime later due to I/O.
+	if t, ok := srv.(interface{ testEmbeddedByValue() }); ok {
+		t.testEmbeddedByValue()
+	}
+	s.RegisterService(&RecommendationService_ServiceDesc, srv)
+}
+
+func _RecommendationService_ListRecommendations_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListRecommendationsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RecommendationServiceServer).ListRecommendations(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: RecommendationService_ListRecommendations_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RecommendationServiceServer).ListRecommendations(ctx, req.(*ListRecommendationsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// RecommendationService_ServiceDesc is the grpc.ServiceDesc for RecommendationService service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var RecommendationService_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "hipstershop.RecommendationService",
+	HandlerType: (*RecommendationServiceServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "ListRecommendations",
+			Handler:    _RecommendationService_ListRecommendations_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "demo.proto",
+}

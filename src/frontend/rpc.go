@@ -126,3 +126,41 @@ func (fe *frontendServer) getAd(ctx context.Context, ctxKeys []string) ([]*pb.Ad
 	})
 	return resp.GetAds(), err
 }
+
+// getRecommendations 获取产品推荐，在 producthandler emptyCartHandler placeOrderHandler 中调用
+//
+// 根据用户 ID 和购物车中的产品 ID 列表，调用推荐服务获取推荐的相似产品。
+// 然后获取每个推荐产品的完整信息，最多返回前 4 个以适应 UI 显示限制。
+//
+// 参数:
+//
+//	ctx - 请求上下文，用于超时控制和取消
+//	userID - 用户的唯一标识符
+//	productIDs - 购物车中当前产品 ID 的列表
+//
+// 返回:
+//
+//	[]*pb.Product - 推荐产品的详细信息列表（最多 4 个）
+//	error - 如果获取推荐或产品信息失败返回错误
+func (fe *frontendServer) getRecommendations(ctx context.Context, userID string, productIDs []string) ([]*pb.Product, error) {
+	client := pb.NewRecommendationServiceClient(fe.recommendationSvcConn)
+	resp, err := client.ListRecommendations(ctx, &pb.ListRecommendationsRequest{
+		UserId:     userID,
+		ProductIds: productIDs,
+	})
+	if err != nil {
+		return nil, err
+	}
+	out := make([]*pb.Product, len(resp.GetProductIds()))
+	for i, v := range resp.GetProductIds() {
+		p, err := fe.GetProduct(ctx, v)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get recommended product info (#%s)", v)
+		}
+		out[i] = p
+	}
+	if len(out) > 4 {
+		out = out[:4] // take only first four to fit the UI
+	}
+	return out, nil
+}

@@ -93,7 +93,7 @@ func (fe *frontendServer) homeHandler(w http.ResponseWriter, r *http.Request) {
 		"show_currency": true,
 		"currencies":    currencies,
 		"products":      ps,
-		"banner_color":  os.Getenv("BANNER_COLOR"),                 // TODO recommendations ad
+		"banner_color":  os.Getenv("BANNER_COLOR"),                 // TODO  cart_size
 		"ad":            nil, // home.html 里完全没有调用 {{ template "text_ad" }} 的代码，这里实际上是一个无效传入。
 	})); err != nil {
 		log.Error(err)
@@ -167,6 +167,11 @@ func (fe *frontendServer) productHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
+	recommendations, err := fe.getRecommendations(r.Context(), sessionID(r), nil) // TODO 第三个参数为nil,也就是随机从所有产品中抽取
+	if err != nil {
+		log.Infof("获取推荐产品失败: %v", err)
+	}
+
 	wrappedProduct := struct {
 		Item  *pb.Product
 		Price *pb.Money
@@ -178,7 +183,8 @@ func (fe *frontendServer) productHandler(w http.ResponseWriter, r *http.Request)
 		"show_currency": true,
 		"product":       wrappedProduct,
 		"currencies":    currencies,
-		// TODO packagingInfo cart_size recommendations ad 待补充
+		"recommendations":  recommendations,
+		// TODO packagingInfo cart_size 待补充
 	})); err != nil {
 		log.Println(err)
 	}

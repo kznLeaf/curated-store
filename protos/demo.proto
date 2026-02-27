@@ -175,3 +175,20 @@ message Ad {
     // short advertisement text to display.
     string text = 2;
 }
+
+// ---------------Recommendation service----------
+
+// 推荐服务
+service RecommendationService {
+    // 根据用户 ID 和商品 ID 列表，返回推荐的商品 ID 列表
+  rpc ListRecommendations(ListRecommendationsRequest) returns (ListRecommendationsResponse){}
+}
+
+message ListRecommendationsRequest {
+    string user_id = 1;
+    repeated string product_ids = 2;
+}
+// ListRecommendationsResponse 获取商城中的所有产品，去除用户购物车中的产品后，
+message ListRecommendationsResponse {
+    repeated string product_ids = 1;
+}
