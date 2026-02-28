@@ -9,7 +9,8 @@ SERVICES=(
   "src/shippingservice"
   "src/paymentservice"
   "src/adservice"
-  # "src/recommendationservice" 这个建议手动执行
+  "src/recommendationservice"
+  "src/emailservice"
 )
 
 for service in "${SERVICES[@]}"; do
