@@ -19,6 +19,8 @@ build:
     context: src/adservice
   - image: recommendationservice
     context: src/recommendationservice
+  - image: emailservice
+    context: src/emailservice
   tagPolicy:
     gitCommit: {}
   local:
