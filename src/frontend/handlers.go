@@ -93,8 +93,8 @@ func (fe *frontendServer) homeHandler(w http.ResponseWriter, r *http.Request) {
 		"show_currency": true,
 		"currencies":    currencies,
 		"products":      ps,
-		"banner_color":  os.Getenv("BANNER_COLOR"),                 // TODO  cart_size
-		"ad":            nil, // home.html 里完全没有调用 {{ template "text_ad" }} 的代码，这里实际上是一个无效传入。
+		"banner_color":  os.Getenv("BANNER_COLOR"), // TODO  cart_size
+		"ad":            nil,                       // home.html 里完全没有调用 {{ template "text_ad" }} 的代码，这里实际上是一个无效传入。
 	})); err != nil {
 		log.Error(err)
 	}
@@ -180,10 +180,10 @@ func (fe *frontendServer) productHandler(w http.ResponseWriter, r *http.Request)
 	// 渲染 product.html 模板，把填充后的页面写入 r
 	if err := templates.ExecuteTemplate(w, "product", injectCommonTemplateData(r, map[string]interface{}{
 		"ad":              fe.chooseAd(r.Context(), product.Categories, log),
-		"show_currency": true,
-		"product":       wrappedProduct,
-		"currencies":    currencies,
-		"recommendations":  recommendations,
+		"show_currency":   true,
+		"product":         wrappedProduct,
+		"currencies":      currencies,
+		"recommendations": recommendations,
 		// TODO packagingInfo cart_size 待补充
 	})); err != nil {
 		log.Println(err)
@@ -323,7 +323,7 @@ func (fe *frontendServer) chooseAd(ctx context.Context, ctxKeys []string, log lo
 		return nil
 	}
 
-    res := ads[rand.Intn(len(ads))]
+	res := ads[rand.Intn(len(ads))]
 	log.Debugf("[chooseAd]从 %d 个广告中选择了广告: %v", len(ads), res)
 	return res
 }

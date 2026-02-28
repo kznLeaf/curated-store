@@ -1,4 +1,4 @@
-# 产品目录服务
+# productcatalog
 
 ## 公开的API
 
@@ -47,35 +47,5 @@ func (p *productCatalog) ListProducts(context.Context, *pb.Empty) (*pb.ListProdu
 
 func (p *productCatalog) GetProduct(ctx context.Context, req *pb.GetProductRequest) (*pb.Product, error) 
 
-func (p *productCatalog) SearchProducts(ctx context.Context, req *pb.SearchProductsRequest) (*pb.SearchProductsResponse, error) {
+func (p *productCatalog) SearchProducts(ctx context.Context, req *pb.SearchProductsRequest) (*pb.SearchProductsResponse, error)
 ```
-
-运行`gofmt -s -w .`格式化并简化代码。
-
-在跟目录下运行下面的命令部署应用：
-
-```bash
-skaffold run
-```
-
-部署之后设置端口转发：
-
-```bash
-kubectl port-forward deployment/frontend 8080:8080
-```
-
-然后就可以访问`http://localhost:8080/66VCHSJNUP`，这会调用`handlers.go`中的`productHandler`，同时调用三个待测试的API,将结果输出到日志中。
-
-```bash
-$ kubectl get pods
-NAME                                     READY   STATUS    RESTARTS   AGE
-frontend-664b67c9d4-7t2bv                1/1     Running   0          50s
-productcatalogservice-75c69f777d-lbk62   1/1     Running   0          50s
-
-$ kubectl logs frontend-664b67c9d4-7t2bv
-
-$ kubectl logs productcatalogservice-75c69f777d-lbk62
-```
-
-
-

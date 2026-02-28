@@ -4,90 +4,87 @@
 # source: demo.proto
 # Protobuf Python Version: 6.31.1
 """Generated protocol buffer code."""
+
 from google.protobuf import descriptor as _descriptor
 from google.protobuf import descriptor_pool as _descriptor_pool
 from google.protobuf import runtime_version as _runtime_version
 from google.protobuf import symbol_database as _symbol_database
 from google.protobuf.internal import builder as _builder
+
 _runtime_version.ValidateProtobufRuntimeVersion(
-    _runtime_version.Domain.PUBLIC,
-    6,
-    31,
-    1,
-    '',
-    'demo.proto'
+    _runtime_version.Domain.PUBLIC, 6, 31, 1, "", "demo.proto"
 )
 # @@protoc_insertion_point(imports)
 
 _sym_db = _symbol_database.Default()
 
 
-
-
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\ndemo.proto\x12\x0bhipstershop\"\x07\n\x05\x45mpty\"<\n\x05Money\x12\x15\n\rcurrency_code\x18\x01 \x01(\t\x12\r\n\x05units\x18\x02 \x01(\x03\x12\r\n\x05nanos\x18\x03 \x01(\x05\"\x84\x01\n\x07Product\x12\n\n\x02id\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x13\n\x0b\x64\x65scription\x18\x03 \x01(\t\x12\x0f\n\x07picture\x18\x04 \x01(\t\x12%\n\tprice_usd\x18\x05 \x01(\x0b\x32\x12.hipstershop.Money\x12\x12\n\ncategories\x18\x06 \x03(\t\">\n\x14ListProductsResponse\x12&\n\x08products\x18\x01 \x03(\x0b\x32\x14.hipstershop.Product\"\x1f\n\x11GetProductRequest\x12\n\n\x02id\x18\x01 \x01(\t\"&\n\x15SearchProductsRequest\x12\r\n\x05query\x18\x01 \x01(\t\"?\n\x16SearchProductsResponse\x12%\n\x07results\x18\x01 \x03(\x0b\x32\x14.hipstershop.Product\"8\n\x1eGetSupportedCurrenciesResponse\x12\x16\n\x0e\x63urrency_codes\x18\x01 \x03(\t\"N\n\x19\x43urrencyConversionRequest\x12 \n\x04\x66rom\x18\x01 \x01(\x0b\x32\x12.hipstershop.Money\x12\x0f\n\x07to_code\x18\x02 \x01(\t\"a\n\x07\x41\x64\x64ress\x12\x16\n\x0estreet_address\x18\x01 \x01(\t\x12\x0c\n\x04\x63ity\x18\x02 \x01(\t\x12\r\n\x05state\x18\x03 \x01(\t\x12\x0f\n\x07\x63ountry\x18\x04 \x01(\t\x12\x10\n\x08zip_code\x18\x05 \x01(\x05\"0\n\x08\x43\x61rtItem\x12\x12\n\nproduct_id\x18\x01 \x01(\t\x12\x10\n\x08quantity\x18\x02 \x01(\x05\"^\n\x0fGetQuoteRequest\x12%\n\x07\x61\x64\x64ress\x18\x01 \x01(\x0b\x32\x14.hipstershop.Address\x12$\n\x05items\x18\x02 \x03(\x0b\x32\x15.hipstershop.CartItem\"8\n\x10GetQuoteResponse\x12$\n\x08\x63ost_usd\x18\x01 \x01(\x0b\x32\x12.hipstershop.Money\"_\n\x10ShipOrderRequest\x12%\n\x07\x61\x64\x64ress\x18\x01 \x01(\x0b\x32\x14.hipstershop.Address\x12$\n\x05items\x18\x02 \x03(\x0b\x32\x15.hipstershop.CartItem\"(\n\x11ShipOrderResponse\x12\x13\n\x0btracking_id\x18\x01 \x01(\t\"\x90\x01\n\x0e\x43reditCardInfo\x12\x1a\n\x12\x63redit_card_number\x18\x01 \x01(\t\x12\x17\n\x0f\x63redit_card_cvv\x18\x02 \x01(\x05\x12#\n\x1b\x63redit_card_expiration_year\x18\x03 \x01(\x05\x12$\n\x1c\x63redit_card_expiration_month\x18\x04 \x01(\x05\"e\n\rChargeRequest\x12\"\n\x06\x61mount\x18\x01 \x01(\x0b\x32\x12.hipstershop.Money\x12\x30\n\x0b\x63redit_card\x18\x02 \x01(\x0b\x32\x1b.hipstershop.CreditCardInfo\"(\n\x0e\x43hargeResponse\x12\x16\n\x0etransaction_id\x18\x01 \x01(\t\"!\n\tAdRequest\x12\x14\n\x0c\x63ontext_keys\x18\x01 \x03(\t\"*\n\nAdResponse\x12\x1c\n\x03\x61\x64s\x18\x01 \x03(\x0b\x32\x0f.hipstershop.Ad\"(\n\x02\x41\x64\x12\x14\n\x0credirect_url\x18\x01 \x01(\t\x12\x0c\n\x04text\x18\x02 \x01(\t\"B\n\x1aListRecommendationsRequest\x12\x0f\n\x07user_id\x18\x01 \x01(\t\x12\x13\n\x0bproduct_ids\x18\x02 \x03(\t\"2\n\x1bListRecommendationsResponse\x12\x13\n\x0bproduct_ids\x18\x01 \x03(\t2\x83\x02\n\x15ProductCatalogService\x12G\n\x0cListProducts\x12\x12.hipstershop.Empty\x1a!.hipstershop.ListProductsResponse\"\x00\x12\x44\n\nGetProduct\x12\x1e.hipstershop.GetProductRequest\x1a\x14.hipstershop.Product\"\x00\x12[\n\x0eSearchProducts\x12\".hipstershop.SearchProductsRequest\x1a#.hipstershop.SearchProductsResponse\"\x00\x32\xb7\x01\n\x0f\x43urrencyService\x12[\n\x16GetSupportedCurrencies\x12\x12.hipstershop.Empty\x1a+.hipstershop.GetSupportedCurrenciesResponse\"\x00\x12G\n\x07\x43onvert\x12&.hipstershop.CurrencyConversionRequest\x1a\x12.hipstershop.Money\"\x00\x32\xaa\x01\n\x0fShippingService\x12I\n\x08GetQuote\x12\x1c.hipstershop.GetQuoteRequest\x1a\x1d.hipstershop.GetQuoteResponse\"\x00\x12L\n\tShipOrder\x12\x1d.hipstershop.ShipOrderRequest\x1a\x1e.hipstershop.ShipOrderResponse\"\x00\x32U\n\x0ePaymentService\x12\x43\n\x06\x43harge\x12\x1a.hipstershop.ChargeRequest\x1a\x1b.hipstershop.ChargeResponse\"\x00\x32H\n\tAdService\x12;\n\x06GetAds\x12\x16.hipstershop.AdRequest\x1a\x17.hipstershop.AdResponse\"\x00\x32\x83\x01\n\x15RecommendationService\x12j\n\x13ListRecommendations\x12\'.hipstershop.ListRecommendationsRequest\x1a(.hipstershop.ListRecommendationsResponse\"\x00\x42\x12Z\x10\x64\x65mo/hipstershopb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(
+    b'\n\ndemo.proto\x12\x0bhipstershop"\x07\n\x05\x45mpty"<\n\x05Money\x12\x15\n\rcurrency_code\x18\x01 \x01(\t\x12\r\n\x05units\x18\x02 \x01(\x03\x12\r\n\x05nanos\x18\x03 \x01(\x05"\x84\x01\n\x07Product\x12\n\n\x02id\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x13\n\x0b\x64\x65scription\x18\x03 \x01(\t\x12\x0f\n\x07picture\x18\x04 \x01(\t\x12%\n\tprice_usd\x18\x05 \x01(\x0b\x32\x12.hipstershop.Money\x12\x12\n\ncategories\x18\x06 \x03(\t">\n\x14ListProductsResponse\x12&\n\x08products\x18\x01 \x03(\x0b\x32\x14.hipstershop.Product"\x1f\n\x11GetProductRequest\x12\n\n\x02id\x18\x01 \x01(\t"&\n\x15SearchProductsRequest\x12\r\n\x05query\x18\x01 \x01(\t"?\n\x16SearchProductsResponse\x12%\n\x07results\x18\x01 \x03(\x0b\x32\x14.hipstershop.Product"8\n\x1eGetSupportedCurrenciesResponse\x12\x16\n\x0e\x63urrency_codes\x18\x01 \x03(\t"N\n\x19\x43urrencyConversionRequest\x12 \n\x04\x66rom\x18\x01 \x01(\x0b\x32\x12.hipstershop.Money\x12\x0f\n\x07to_code\x18\x02 \x01(\t"a\n\x07\x41\x64\x64ress\x12\x16\n\x0estreet_address\x18\x01 \x01(\t\x12\x0c\n\x04\x63ity\x18\x02 \x01(\t\x12\r\n\x05state\x18\x03 \x01(\t\x12\x0f\n\x07\x63ountry\x18\x04 \x01(\t\x12\x10\n\x08zip_code\x18\x05 \x01(\x05"0\n\x08\x43\x61rtItem\x12\x12\n\nproduct_id\x18\x01 \x01(\t\x12\x10\n\x08quantity\x18\x02 \x01(\x05"^\n\x0fGetQuoteRequest\x12%\n\x07\x61\x64\x64ress\x18\x01 \x01(\x0b\x32\x14.hipstershop.Address\x12$\n\x05items\x18\x02 \x03(\x0b\x32\x15.hipstershop.CartItem"8\n\x10GetQuoteResponse\x12$\n\x08\x63ost_usd\x18\x01 \x01(\x0b\x32\x12.hipstershop.Money"_\n\x10ShipOrderRequest\x12%\n\x07\x61\x64\x64ress\x18\x01 \x01(\x0b\x32\x14.hipstershop.Address\x12$\n\x05items\x18\x02 \x03(\x0b\x32\x15.hipstershop.CartItem"(\n\x11ShipOrderResponse\x12\x13\n\x0btracking_id\x18\x01 \x01(\t"\x90\x01\n\x0e\x43reditCardInfo\x12\x1a\n\x12\x63redit_card_number\x18\x01 \x01(\t\x12\x17\n\x0f\x63redit_card_cvv\x18\x02 \x01(\x05\x12#\n\x1b\x63redit_card_expiration_year\x18\x03 \x01(\x05\x12$\n\x1c\x63redit_card_expiration_month\x18\x04 \x01(\x05"e\n\rChargeRequest\x12"\n\x06\x61mount\x18\x01 \x01(\x0b\x32\x12.hipstershop.Money\x12\x30\n\x0b\x63redit_card\x18\x02 \x01(\x0b\x32\x1b.hipstershop.CreditCardInfo"(\n\x0e\x43hargeResponse\x12\x16\n\x0etransaction_id\x18\x01 \x01(\t"!\n\tAdRequest\x12\x14\n\x0c\x63ontext_keys\x18\x01 \x03(\t"*\n\nAdResponse\x12\x1c\n\x03\x61\x64s\x18\x01 \x03(\x0b\x32\x0f.hipstershop.Ad"(\n\x02\x41\x64\x12\x14\n\x0credirect_url\x18\x01 \x01(\t\x12\x0c\n\x04text\x18\x02 \x01(\t"B\n\x1aListRecommendationsRequest\x12\x0f\n\x07user_id\x18\x01 \x01(\t\x12\x13\n\x0bproduct_ids\x18\x02 \x03(\t"2\n\x1bListRecommendationsResponse\x12\x13\n\x0bproduct_ids\x18\x01 \x03(\t2\x83\x02\n\x15ProductCatalogService\x12G\n\x0cListProducts\x12\x12.hipstershop.Empty\x1a!.hipstershop.ListProductsResponse"\x00\x12\x44\n\nGetProduct\x12\x1e.hipstershop.GetProductRequest\x1a\x14.hipstershop.Product"\x00\x12[\n\x0eSearchProducts\x12".hipstershop.SearchProductsRequest\x1a#.hipstershop.SearchProductsResponse"\x00\x32\xb7\x01\n\x0f\x43urrencyService\x12[\n\x16GetSupportedCurrencies\x12\x12.hipstershop.Empty\x1a+.hipstershop.GetSupportedCurrenciesResponse"\x00\x12G\n\x07\x43onvert\x12&.hipstershop.CurrencyConversionRequest\x1a\x12.hipstershop.Money"\x00\x32\xaa\x01\n\x0fShippingService\x12I\n\x08GetQuote\x12\x1c.hipstershop.GetQuoteRequest\x1a\x1d.hipstershop.GetQuoteResponse"\x00\x12L\n\tShipOrder\x12\x1d.hipstershop.ShipOrderRequest\x1a\x1e.hipstershop.ShipOrderResponse"\x00\x32U\n\x0ePaymentService\x12\x43\n\x06\x43harge\x12\x1a.hipstershop.ChargeRequest\x1a\x1b.hipstershop.ChargeResponse"\x00\x32H\n\tAdService\x12;\n\x06GetAds\x12\x16.hipstershop.AdRequest\x1a\x17.hipstershop.AdResponse"\x00\x32\x83\x01\n\x15RecommendationService\x12j\n\x13ListRecommendations\x12\'.hipstershop.ListRecommendationsRequest\x1a(.hipstershop.ListRecommendationsResponse"\x00\x42\x12Z\x10\x64\x65mo/hipstershopb\x06proto3'
+)
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
-_builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'demo_pb2', _globals)
+_builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, "demo_pb2", _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
-  _globals['DESCRIPTOR']._loaded_options = None
-  _globals['DESCRIPTOR']._serialized_options = b'Z\020demo/hipstershop'
-  _globals['_EMPTY']._serialized_start=27
-  _globals['_EMPTY']._serialized_end=34
-  _globals['_MONEY']._serialized_start=36
-  _globals['_MONEY']._serialized_end=96
-  _globals['_PRODUCT']._serialized_start=99
-  _globals['_PRODUCT']._serialized_end=231
-  _globals['_LISTPRODUCTSRESPONSE']._serialized_start=233
-  _globals['_LISTPRODUCTSRESPONSE']._serialized_end=295
-  _globals['_GETPRODUCTREQUEST']._serialized_start=297
-  _globals['_GETPRODUCTREQUEST']._serialized_end=328
-  _globals['_SEARCHPRODUCTSREQUEST']._serialized_start=330
-  _globals['_SEARCHPRODUCTSREQUEST']._serialized_end=368
-  _globals['_SEARCHPRODUCTSRESPONSE']._serialized_start=370
-  _globals['_SEARCHPRODUCTSRESPONSE']._serialized_end=433
-  _globals['_GETSUPPORTEDCURRENCIESRESPONSE']._serialized_start=435
-  _globals['_GETSUPPORTEDCURRENCIESRESPONSE']._serialized_end=491
-  _globals['_CURRENCYCONVERSIONREQUEST']._serialized_start=493
-  _globals['_CURRENCYCONVERSIONREQUEST']._serialized_end=571
-  _globals['_ADDRESS']._serialized_start=573
-  _globals['_ADDRESS']._serialized_end=670
-  _globals['_CARTITEM']._serialized_start=672
-  _globals['_CARTITEM']._serialized_end=720
-  _globals['_GETQUOTEREQUEST']._serialized_start=722
-  _globals['_GETQUOTEREQUEST']._serialized_end=816
-  _globals['_GETQUOTERESPONSE']._serialized_start=818
-  _globals['_GETQUOTERESPONSE']._serialized_end=874
-  _globals['_SHIPORDERREQUEST']._serialized_start=876
-  _globals['_SHIPORDERREQUEST']._serialized_end=971
-  _globals['_SHIPORDERRESPONSE']._serialized_start=973
-  _globals['_SHIPORDERRESPONSE']._serialized_end=1013
-  _globals['_CREDITCARDINFO']._serialized_start=1016
-  _globals['_CREDITCARDINFO']._serialized_end=1160
-  _globals['_CHARGEREQUEST']._serialized_start=1162
-  _globals['_CHARGEREQUEST']._serialized_end=1263
-  _globals['_CHARGERESPONSE']._serialized_start=1265
-  _globals['_CHARGERESPONSE']._serialized_end=1305
-  _globals['_ADREQUEST']._serialized_start=1307
-  _globals['_ADREQUEST']._serialized_end=1340
-  _globals['_ADRESPONSE']._serialized_start=1342
-  _globals['_ADRESPONSE']._serialized_end=1384
-  _globals['_AD']._serialized_start=1386
-  _globals['_AD']._serialized_end=1426
-  _globals['_LISTRECOMMENDATIONSREQUEST']._serialized_start=1428
-  _globals['_LISTRECOMMENDATIONSREQUEST']._serialized_end=1494
-  _globals['_LISTRECOMMENDATIONSRESPONSE']._serialized_start=1496
-  _globals['_LISTRECOMMENDATIONSRESPONSE']._serialized_end=1546
-  _globals['_PRODUCTCATALOGSERVICE']._serialized_start=1549
-  _globals['_PRODUCTCATALOGSERVICE']._serialized_end=1808
-  _globals['_CURRENCYSERVICE']._serialized_start=1811
-  _globals['_CURRENCYSERVICE']._serialized_end=1994
-  _globals['_SHIPPINGSERVICE']._serialized_start=1997
-  _globals['_SHIPPINGSERVICE']._serialized_end=2167
-  _globals['_PAYMENTSERVICE']._serialized_start=2169
-  _globals['_PAYMENTSERVICE']._serialized_end=2254
-  _globals['_ADSERVICE']._serialized_start=2256
-  _globals['_ADSERVICE']._serialized_end=2328
-  _globals['_RECOMMENDATIONSERVICE']._serialized_start=2331
-  _globals['_RECOMMENDATIONSERVICE']._serialized_end=2462
+    _globals["DESCRIPTOR"]._loaded_options = None
+    _globals["DESCRIPTOR"]._serialized_options = b"Z\020demo/hipstershop"
+    _globals["_EMPTY"]._serialized_start = 27
+    _globals["_EMPTY"]._serialized_end = 34
+    _globals["_MONEY"]._serialized_start = 36
+    _globals["_MONEY"]._serialized_end = 96
+    _globals["_PRODUCT"]._serialized_start = 99
+    _globals["_PRODUCT"]._serialized_end = 231
+    _globals["_LISTPRODUCTSRESPONSE"]._serialized_start = 233
+    _globals["_LISTPRODUCTSRESPONSE"]._serialized_end = 295
+    _globals["_GETPRODUCTREQUEST"]._serialized_start = 297
+    _globals["_GETPRODUCTREQUEST"]._serialized_end = 328
+    _globals["_SEARCHPRODUCTSREQUEST"]._serialized_start = 330
+    _globals["_SEARCHPRODUCTSREQUEST"]._serialized_end = 368
+    _globals["_SEARCHPRODUCTSRESPONSE"]._serialized_start = 370
+    _globals["_SEARCHPRODUCTSRESPONSE"]._serialized_end = 433
+    _globals["_GETSUPPORTEDCURRENCIESRESPONSE"]._serialized_start = 435
+    _globals["_GETSUPPORTEDCURRENCIESRESPONSE"]._serialized_end = 491
+    _globals["_CURRENCYCONVERSIONREQUEST"]._serialized_start = 493
+    _globals["_CURRENCYCONVERSIONREQUEST"]._serialized_end = 571
+    _globals["_ADDRESS"]._serialized_start = 573
+    _globals["_ADDRESS"]._serialized_end = 670
+    _globals["_CARTITEM"]._serialized_start = 672
+    _globals["_CARTITEM"]._serialized_end = 720
+    _globals["_GETQUOTEREQUEST"]._serialized_start = 722
+    _globals["_GETQUOTEREQUEST"]._serialized_end = 816
+    _globals["_GETQUOTERESPONSE"]._serialized_start = 818
+    _globals["_GETQUOTERESPONSE"]._serialized_end = 874
+    _globals["_SHIPORDERREQUEST"]._serialized_start = 876
+    _globals["_SHIPORDERREQUEST"]._serialized_end = 971
+    _globals["_SHIPORDERRESPONSE"]._serialized_start = 973
+    _globals["_SHIPORDERRESPONSE"]._serialized_end = 1013
+    _globals["_CREDITCARDINFO"]._serialized_start = 1016
+    _globals["_CREDITCARDINFO"]._serialized_end = 1160
+    _globals["_CHARGEREQUEST"]._serialized_start = 1162
+    _globals["_CHARGEREQUEST"]._serialized_end = 1263
+    _globals["_CHARGERESPONSE"]._serialized_start = 1265
+    _globals["_CHARGERESPONSE"]._serialized_end = 1305
+    _globals["_ADREQUEST"]._serialized_start = 1307
+    _globals["_ADREQUEST"]._serialized_end = 1340
+    _globals["_ADRESPONSE"]._serialized_start = 1342
+    _globals["_ADRESPONSE"]._serialized_end = 1384
+    _globals["_AD"]._serialized_start = 1386
+    _globals["_AD"]._serialized_end = 1426
+    _globals["_LISTRECOMMENDATIONSREQUEST"]._serialized_start = 1428
+    _globals["_LISTRECOMMENDATIONSREQUEST"]._serialized_end = 1494
+    _globals["_LISTRECOMMENDATIONSRESPONSE"]._serialized_start = 1496
+    _globals["_LISTRECOMMENDATIONSRESPONSE"]._serialized_end = 1546
+    _globals["_PRODUCTCATALOGSERVICE"]._serialized_start = 1549
+    _globals["_PRODUCTCATALOGSERVICE"]._serialized_end = 1808
+    _globals["_CURRENCYSERVICE"]._serialized_start = 1811
+    _globals["_CURRENCYSERVICE"]._serialized_end = 1994
+    _globals["_SHIPPINGSERVICE"]._serialized_start = 1997
+    _globals["_SHIPPINGSERVICE"]._serialized_end = 2167
+    _globals["_PAYMENTSERVICE"]._serialized_start = 2169
+    _globals["_PAYMENTSERVICE"]._serialized_end = 2254
+    _globals["_ADSERVICE"]._serialized_start = 2256
+    _globals["_ADSERVICE"]._serialized_end = 2328
+    _globals["_RECOMMENDATIONSERVICE"]._serialized_start = 2331
+    _globals["_RECOMMENDATIONSERVICE"]._serialized_end = 2462
 # @@protoc_insertion_point(module_scope)
