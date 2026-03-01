@@ -32,6 +32,9 @@ type frontendServer struct {
 
 	recommendationSvcAddr string
 	recommendationSvcConn *grpc.ClientConn
+
+	cartSvcAddr string
+	cartSvcConn *grpc.ClientConn
 }
 
 const (
@@ -84,6 +87,7 @@ func main() {
 	mustMapEnv(&svc.shippingSvcAddr, "SHIPPING_SERVICE_ADDR")
 	mustMapEnv(&svc.adSvcAddr, "AD_SERVICE_ADDR")
 	mustMapEnv(&svc.recommendationSvcAddr, "RECOMMENDATION_SERVICE_ADDR")
+	mustMapEnv(&svc.cartSvcAddr, "CART_SERVICE_ADDR")
 
 	// 利用上一步读取的服务地址，建立gRPC连接
 	mustConnGRPC(ctx, &svc.productCatalogSvcConn, svc.productCatalogSvcAddr)
@@ -91,6 +95,7 @@ func main() {
 	mustConnGRPC(ctx, &svc.shippingSvcConn, svc.shippingSvcAddr)
 	mustConnGRPC(ctx, &svc.adSvcConn, svc.adSvcAddr)
 	mustConnGRPC(ctx, &svc.recommendationSvcConn, svc.recommendationSvcAddr)
+	mustConnGRPC(ctx, &svc.cartSvcConn, svc.cartSvcAddr)
 
 	// baseUrl := os.Getenv("BASE_URL") // 该环境变量位于 kustomize/components/custom-base-url/kustomization.yaml
 
@@ -102,7 +107,8 @@ func main() {
 	r.HandleFunc(baseUrl+"/setCurrency", svc.setCurrencyHandler).Methods(http.MethodPost)                             // 用户手动切换货币
 	r.HandleFunc(baseUrl+"/cart", svc.viewCartHandler).Methods(http.MethodGet, http.MethodHead)
 	r.PathPrefix(baseUrl + "/static/").Handler(http.StripPrefix(baseUrl+"/static/", http.FileServer(http.Dir("./static/")))) // 加载static/目录下的静态资源
-
+	r.HandleFunc(baseUrl + "/cart", svc.addToCartHandler).Methods(http.MethodPost) // 添加商品到购物车
+    r.HandleFunc(baseUrl + "/cart", svc.viewCartHandler).Methods(http.MethodGet, http.MethodHead) // 查看购物车
 	var handler http.Handler = r // Router实现了 http.Handler 接口
 
 	log.Infof("starting server on %s:%s", addr, srvPort)

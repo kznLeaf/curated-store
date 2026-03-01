@@ -222,15 +222,18 @@ func (fe *frontendServer) setCurrencyHandler(w http.ResponseWriter, r *http.Requ
 // viewCartHandler
 // TODO viewCartHandler待完善
 func (fe *frontendServer) viewCartHandler(w http.ResponseWriter, r *http.Request) {
-	cart := []*pb.CartItem{
-		{ProductId: "MAHOYOSSSS", Quantity: 111},
-		{ProductId: "6E92ZMYYFZ", Quantity: 1222},
+	log.Debug("view cart")
+
+	if err := templates.ExecuteTemplate(w, "cart", injectCommonTemplateData(r, map[string]interface{}{
+
+	})); err != nil {
+		log.Println(err)
 	}
-	shippingCost, err := fe.getShippingQuote(r.Context(), cart, "JPY")
-	log.Debugf("getShippingQuote的执行结果 %v", shippingCost)
-	if err != nil {
-		log.Errorf("[shippingcost]: error %v", err)
-	}
+}
+
+func (fe *frontendServer) addToCartHandler(w http.ResponseWriter, r *http.Request) {
+
+
 }
 
 // 渲染相关的函数

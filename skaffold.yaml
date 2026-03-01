@@ -21,6 +21,8 @@ build:
     context: src/recommendationservice
   - image: emailservice
     context: src/emailservice
+  - image: cartservice
+    context: src/cartservice
   tagPolicy:
     gitCommit: {}
   local:
