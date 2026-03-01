@@ -1402,6 +1402,198 @@ func (x *SendOrderConfirmationRequest) GetOrder() *OrderResult {
 	return nil
 }
 
+type AddItemRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	Item          *CartItem              `protobuf:"bytes,2,opt,name=item,proto3" json:"item,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AddItemRequest) Reset() {
+	*x = AddItemRequest{}
+	mi := &file_demo_proto_msgTypes[26]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AddItemRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AddItemRequest) ProtoMessage() {}
+
+func (x *AddItemRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_demo_proto_msgTypes[26]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AddItemRequest.ProtoReflect.Descriptor instead.
+func (*AddItemRequest) Descriptor() ([]byte, []int) {
+	return file_demo_proto_rawDescGZIP(), []int{26}
+}
+
+func (x *AddItemRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+func (x *AddItemRequest) GetItem() *CartItem {
+	if x != nil {
+		return x.Item
+	}
+	return nil
+}
+
+type EmptyCartRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *EmptyCartRequest) Reset() {
+	*x = EmptyCartRequest{}
+	mi := &file_demo_proto_msgTypes[27]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *EmptyCartRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*EmptyCartRequest) ProtoMessage() {}
+
+func (x *EmptyCartRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_demo_proto_msgTypes[27]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use EmptyCartRequest.ProtoReflect.Descriptor instead.
+func (*EmptyCartRequest) Descriptor() ([]byte, []int) {
+	return file_demo_proto_rawDescGZIP(), []int{27}
+}
+
+func (x *EmptyCartRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+type GetCartRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetCartRequest) Reset() {
+	*x = GetCartRequest{}
+	mi := &file_demo_proto_msgTypes[28]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetCartRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetCartRequest) ProtoMessage() {}
+
+func (x *GetCartRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_demo_proto_msgTypes[28]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetCartRequest.ProtoReflect.Descriptor instead.
+func (*GetCartRequest) Descriptor() ([]byte, []int) {
+	return file_demo_proto_rawDescGZIP(), []int{28}
+}
+
+func (x *GetCartRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+type Cart struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	Items         []*CartItem            `protobuf:"bytes,2,rep,name=items,proto3" json:"items,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Cart) Reset() {
+	*x = Cart{}
+	mi := &file_demo_proto_msgTypes[29]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Cart) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Cart) ProtoMessage() {}
+
+func (x *Cart) ProtoReflect() protoreflect.Message {
+	mi := &file_demo_proto_msgTypes[29]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Cart.ProtoReflect.Descriptor instead.
+func (*Cart) Descriptor() ([]byte, []int) {
+	return file_demo_proto_rawDescGZIP(), []int{29}
+}
+
+func (x *Cart) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+func (x *Cart) GetItems() []*CartItem {
+	if x != nil {
+		return x.Items
+	}
+	return nil
+}
+
 var File_demo_proto protoreflect.FileDescriptor
 
 const file_demo_proto_rawDesc = "" +
@@ -1493,7 +1685,17 @@ const file_demo_proto_rawDesc = "" +
 	"\x05items\x18\x05 \x03(\v2\x16.hipstershop.OrderItemR\x05items\"d\n" +
 	"\x1cSendOrderConfirmationRequest\x12\x14\n" +
 	"\x05email\x18\x01 \x01(\tR\x05email\x12.\n" +
-	"\x05order\x18\x02 \x01(\v2\x18.hipstershop.OrderResultR\x05order2\x83\x02\n" +
+	"\x05order\x18\x02 \x01(\v2\x18.hipstershop.OrderResultR\x05order\"T\n" +
+	"\x0eAddItemRequest\x12\x17\n" +
+	"\auser_id\x18\x01 \x01(\tR\x06userId\x12)\n" +
+	"\x04item\x18\x02 \x01(\v2\x15.hipstershop.CartItemR\x04item\"+\n" +
+	"\x10EmptyCartRequest\x12\x17\n" +
+	"\auser_id\x18\x01 \x01(\tR\x06userId\")\n" +
+	"\x0eGetCartRequest\x12\x17\n" +
+	"\auser_id\x18\x01 \x01(\tR\x06userId\"L\n" +
+	"\x04Cart\x12\x17\n" +
+	"\auser_id\x18\x01 \x01(\tR\x06userId\x12+\n" +
+	"\x05items\x18\x02 \x03(\v2\x15.hipstershop.CartItemR\x05items2\x83\x02\n" +
 	"\x15ProductCatalogService\x12G\n" +
 	"\fListProducts\x12\x12.hipstershop.Empty\x1a!.hipstershop.ListProductsResponse\"\x00\x12D\n" +
 	"\n" +
@@ -1512,7 +1714,11 @@ const file_demo_proto_rawDesc = "" +
 	"\x15RecommendationService\x12j\n" +
 	"\x13ListRecommendations\x12'.hipstershop.ListRecommendationsRequest\x1a(.hipstershop.ListRecommendationsResponse\"\x002h\n" +
 	"\fEmailService\x12X\n" +
-	"\x15SendOrderConfirmation\x12).hipstershop.SendOrderConfirmationRequest\x1a\x12.hipstershop.Empty\"\x00B\x12Z\x10demo/hipstershopb\x06proto3"
+	"\x15SendOrderConfirmation\x12).hipstershop.SendOrderConfirmationRequest\x1a\x12.hipstershop.Empty\"\x002\xca\x01\n" +
+	"\vCartService\x12<\n" +
+	"\aAddItem\x12\x1b.hipstershop.AddItemRequest\x1a\x12.hipstershop.Empty\"\x00\x12;\n" +
+	"\aGetCart\x12\x1b.hipstershop.GetCartRequest\x1a\x11.hipstershop.Cart\"\x00\x12@\n" +
+	"\tEmptyCart\x12\x1d.hipstershop.EmptyCartRequest\x1a\x12.hipstershop.Empty\"\x00B\x12Z\x10demo/hipstershopb\x06proto3"
 
 var (
 	file_demo_proto_rawDescOnce sync.Once
@@ -1526,7 +1732,7 @@ func file_demo_proto_rawDescGZIP() []byte {
 	return file_demo_proto_rawDescData
 }
 
-var file_demo_proto_msgTypes = make([]protoimpl.MessageInfo, 26)
+var file_demo_proto_msgTypes = make([]protoimpl.MessageInfo, 30)
 var file_demo_proto_goTypes = []any{
 	(*Empty)(nil),                          // 0: hipstershop.Empty
 	(*Money)(nil),                          // 1: hipstershop.Money
@@ -1554,6 +1760,10 @@ var file_demo_proto_goTypes = []any{
 	(*OrderItem)(nil),                      // 23: hipstershop.OrderItem
 	(*OrderResult)(nil),                    // 24: hipstershop.OrderResult
 	(*SendOrderConfirmationRequest)(nil),   // 25: hipstershop.SendOrderConfirmationRequest
+	(*AddItemRequest)(nil),                 // 26: hipstershop.AddItemRequest
+	(*EmptyCartRequest)(nil),               // 27: hipstershop.EmptyCartRequest
+	(*GetCartRequest)(nil),                 // 28: hipstershop.GetCartRequest
+	(*Cart)(nil),                           // 29: hipstershop.Cart
 }
 var file_demo_proto_depIdxs = []int32{
 	1,  // 0: hipstershop.Product.price_usd:type_name -> hipstershop.Money
@@ -1574,33 +1784,41 @@ var file_demo_proto_depIdxs = []int32{
 	9,  // 15: hipstershop.OrderResult.shipping_address:type_name -> hipstershop.Address
 	23, // 16: hipstershop.OrderResult.items:type_name -> hipstershop.OrderItem
 	24, // 17: hipstershop.SendOrderConfirmationRequest.order:type_name -> hipstershop.OrderResult
-	0,  // 18: hipstershop.ProductCatalogService.ListProducts:input_type -> hipstershop.Empty
-	4,  // 19: hipstershop.ProductCatalogService.GetProduct:input_type -> hipstershop.GetProductRequest
-	5,  // 20: hipstershop.ProductCatalogService.SearchProducts:input_type -> hipstershop.SearchProductsRequest
-	0,  // 21: hipstershop.CurrencyService.GetSupportedCurrencies:input_type -> hipstershop.Empty
-	8,  // 22: hipstershop.CurrencyService.Convert:input_type -> hipstershop.CurrencyConversionRequest
-	11, // 23: hipstershop.ShippingService.GetQuote:input_type -> hipstershop.GetQuoteRequest
-	13, // 24: hipstershop.ShippingService.ShipOrder:input_type -> hipstershop.ShipOrderRequest
-	16, // 25: hipstershop.PaymentService.Charge:input_type -> hipstershop.ChargeRequest
-	18, // 26: hipstershop.AdService.GetAds:input_type -> hipstershop.AdRequest
-	21, // 27: hipstershop.RecommendationService.ListRecommendations:input_type -> hipstershop.ListRecommendationsRequest
-	25, // 28: hipstershop.EmailService.SendOrderConfirmation:input_type -> hipstershop.SendOrderConfirmationRequest
-	3,  // 29: hipstershop.ProductCatalogService.ListProducts:output_type -> hipstershop.ListProductsResponse
-	2,  // 30: hipstershop.ProductCatalogService.GetProduct:output_type -> hipstershop.Product
-	6,  // 31: hipstershop.ProductCatalogService.SearchProducts:output_type -> hipstershop.SearchProductsResponse
-	7,  // 32: hipstershop.CurrencyService.GetSupportedCurrencies:output_type -> hipstershop.GetSupportedCurrenciesResponse
-	1,  // 33: hipstershop.CurrencyService.Convert:output_type -> hipstershop.Money
-	12, // 34: hipstershop.ShippingService.GetQuote:output_type -> hipstershop.GetQuoteResponse
-	14, // 35: hipstershop.ShippingService.ShipOrder:output_type -> hipstershop.ShipOrderResponse
-	17, // 36: hipstershop.PaymentService.Charge:output_type -> hipstershop.ChargeResponse
-	19, // 37: hipstershop.AdService.GetAds:output_type -> hipstershop.AdResponse
-	22, // 38: hipstershop.RecommendationService.ListRecommendations:output_type -> hipstershop.ListRecommendationsResponse
-	0,  // 39: hipstershop.EmailService.SendOrderConfirmation:output_type -> hipstershop.Empty
-	29, // [29:40] is the sub-list for method output_type
-	18, // [18:29] is the sub-list for method input_type
-	18, // [18:18] is the sub-list for extension type_name
-	18, // [18:18] is the sub-list for extension extendee
-	0,  // [0:18] is the sub-list for field type_name
+	10, // 18: hipstershop.AddItemRequest.item:type_name -> hipstershop.CartItem
+	10, // 19: hipstershop.Cart.items:type_name -> hipstershop.CartItem
+	0,  // 20: hipstershop.ProductCatalogService.ListProducts:input_type -> hipstershop.Empty
+	4,  // 21: hipstershop.ProductCatalogService.GetProduct:input_type -> hipstershop.GetProductRequest
+	5,  // 22: hipstershop.ProductCatalogService.SearchProducts:input_type -> hipstershop.SearchProductsRequest
+	0,  // 23: hipstershop.CurrencyService.GetSupportedCurrencies:input_type -> hipstershop.Empty
+	8,  // 24: hipstershop.CurrencyService.Convert:input_type -> hipstershop.CurrencyConversionRequest
+	11, // 25: hipstershop.ShippingService.GetQuote:input_type -> hipstershop.GetQuoteRequest
+	13, // 26: hipstershop.ShippingService.ShipOrder:input_type -> hipstershop.ShipOrderRequest
+	16, // 27: hipstershop.PaymentService.Charge:input_type -> hipstershop.ChargeRequest
+	18, // 28: hipstershop.AdService.GetAds:input_type -> hipstershop.AdRequest
+	21, // 29: hipstershop.RecommendationService.ListRecommendations:input_type -> hipstershop.ListRecommendationsRequest
+	25, // 30: hipstershop.EmailService.SendOrderConfirmation:input_type -> hipstershop.SendOrderConfirmationRequest
+	26, // 31: hipstershop.CartService.AddItem:input_type -> hipstershop.AddItemRequest
+	28, // 32: hipstershop.CartService.GetCart:input_type -> hipstershop.GetCartRequest
+	27, // 33: hipstershop.CartService.EmptyCart:input_type -> hipstershop.EmptyCartRequest
+	3,  // 34: hipstershop.ProductCatalogService.ListProducts:output_type -> hipstershop.ListProductsResponse
+	2,  // 35: hipstershop.ProductCatalogService.GetProduct:output_type -> hipstershop.Product
+	6,  // 36: hipstershop.ProductCatalogService.SearchProducts:output_type -> hipstershop.SearchProductsResponse
+	7,  // 37: hipstershop.CurrencyService.GetSupportedCurrencies:output_type -> hipstershop.GetSupportedCurrenciesResponse
+	1,  // 38: hipstershop.CurrencyService.Convert:output_type -> hipstershop.Money
+	12, // 39: hipstershop.ShippingService.GetQuote:output_type -> hipstershop.GetQuoteResponse
+	14, // 40: hipstershop.ShippingService.ShipOrder:output_type -> hipstershop.ShipOrderResponse
+	17, // 41: hipstershop.PaymentService.Charge:output_type -> hipstershop.ChargeResponse
+	19, // 42: hipstershop.AdService.GetAds:output_type -> hipstershop.AdResponse
+	22, // 43: hipstershop.RecommendationService.ListRecommendations:output_type -> hipstershop.ListRecommendationsResponse
+	0,  // 44: hipstershop.EmailService.SendOrderConfirmation:output_type -> hipstershop.Empty
+	0,  // 45: hipstershop.CartService.AddItem:output_type -> hipstershop.Empty
+	29, // 46: hipstershop.CartService.GetCart:output_type -> hipstershop.Cart
+	0,  // 47: hipstershop.CartService.EmptyCart:output_type -> hipstershop.Empty
+	34, // [34:48] is the sub-list for method output_type
+	20, // [20:34] is the sub-list for method input_type
+	20, // [20:20] is the sub-list for extension type_name
+	20, // [20:20] is the sub-list for extension extendee
+	0,  // [0:20] is the sub-list for field type_name
 }
 
 func init() { file_demo_proto_init() }
@@ -1614,9 +1832,9 @@ func file_demo_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_demo_proto_rawDesc), len(file_demo_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   26,
+			NumMessages:   30,
 			NumExtensions: 0,
-			NumServices:   7,
+			NumServices:   8,
 		},
 		GoTypes:           file_demo_proto_goTypes,
 		DependencyIndexes: file_demo_proto_depIdxs,

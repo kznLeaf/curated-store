@@ -216,3 +216,31 @@ message SendOrderConfirmationRequest {
     string email = 1;
     OrderResult order = 2;
 }
+
+// -----------------Cart service-----------------
+
+service CartService {
+    rpc AddItem(AddItemRequest) returns (Empty) {}
+    rpc GetCart(GetCartRequest) returns (Cart) {}
+    rpc EmptyCart(EmptyCartRequest) returns (Empty) {}
+}
+
+
+
+message AddItemRequest {
+    string user_id = 1;
+    CartItem item = 2;
+}
+
+message EmptyCartRequest {
+    string user_id = 1;
+}
+
+message GetCartRequest {
+    string user_id = 1;
+}
+
+message Cart {
+    string user_id = 1;
+    repeated CartItem items = 2;
+}
