@@ -8,12 +8,14 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"text/template"
 	"time"
 
 	"github.com/gorilla/mux"
 	pb "github.com/kznLeaf/curated-store/src/frontend/genproto"
+	money "github.com/kznLeaf/curated-store/src/frontend/money"
 	validator "github.com/kznLeaf/curated-store/src/frontend/validator"
 	"github.com/sirupsen/logrus"
 )
@@ -219,21 +221,118 @@ func (fe *frontendServer) setCurrencyHandler(w http.ResponseWriter, r *http.Requ
 	// 这可能导致问题。而 303 See Other 明确表示无论原请求是什么方法，用户都应该使用 GET 方法访问 Referer URL，这样更符合我们的需求。
 }
 
-// viewCartHandler
-// TODO viewCartHandler待完善
+// viewCartHandler 适用于 /cart GET HEAD请求
 func (fe *frontendServer) viewCartHandler(w http.ResponseWriter, r *http.Request) {
 	log.Debug("view cart")
 
-	if err := templates.ExecuteTemplate(w, "cart", injectCommonTemplateData(r, map[string]interface{}{
+	currencies, err := fe.getCurrencies(r.Context())
+	if err != nil {
+		renderHTTPError(log, r, w, fmt.Errorf("could not retrieve currencies: %v", err), http.StatusInternalServerError)
+		return
+	}
 
+	cartItems, err := fe.getCart(r.Context(), sessionID(r))
+	if err != nil {
+		renderHTTPError(log, r, w, fmt.Errorf("could not retrieve cart items: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	recommendations, err := fe.getRecommendations(r.Context(), sessionID(r), cartIDs(cartItems))
+	if err != nil {
+		// 获取推荐失败不应该影响用户查看购物车的体验，所以这里记录日志但不返回错误给用户
+		log.WithField("error", err).Warn("failed to get product recommendations")
+	}
+
+	shippingCost, err := fe.getShippingQuote(r.Context(), cartItems, currentCurrency(r))
+	if err != nil {
+		renderHTTPError(log, r, w, fmt.Errorf("could not retrieve shipping quote: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	// 构造一个 cartItemView 切片，包含每个购物车项的产品信息、数量和价格，供模版渲染调用
+	type cartItemView struct {
+		Item     *pb.Product
+		Quantity int32
+		Price    *pb.Money
+	}
+	items := make([]cartItemView, len(cartItems))
+	totalPrice := &pb.Money{CurrencyCode: currentCurrency(r)} // 购物车中所有产品的总价
+	for i, cartItem := range cartItems {
+		p, err := fe.GetProduct(r.Context(), cartItem.GetProductId())
+		if err != nil {
+			renderHTTPError(log, r, w, fmt.Errorf("could not get product info: %v", err), http.StatusInternalServerError)
+
+			return
+		}
+		price, err := fe.convertCurrency(r.Context(), p.GetPriceUsd(), currentCurrency(r))
+		if err != nil {
+			renderHTTPError(log, r, w, fmt.Errorf("could not convert currency: %v", err), http.StatusInternalServerError)
+			return
+		}
+		// 计算每个购物车项的价格 = 产品价格 * 数量。这里直接把 price 乘以数量，得到总价。
+		// 注意 price 是一个 Money 对象，不能直接乘以数量，需要调用 money 包里的函数来实现。
+		multiprice := money.MultiplySlow(price, uint32(cartItem.GetQuantity()))
+		items[i] = cartItemView{
+			Item:     p,
+			Quantity: cartItem.GetQuantity(),
+			Price:    multiprice,
+		}
+		totalPrice = money.Must(money.Sum(totalPrice, multiprice)) // 累加到总价
+	}
+	// 加上运费
+	totalPrice = money.Must(money.Sum(totalPrice, shippingCost))
+	year := time.Now().Year()
+
+	if err := templates.ExecuteTemplate(w, "cart", injectCommonTemplateData(r, map[string]interface{}{
+		"currencies":       currencies,
+		"cart":             cartItems,
+		"recommendations":  recommendations,
+		"shipping_cost":    shippingCost,
+		"cart_size":        cartSize(cartItems),
+		"items":            items,
+		"total_cost":       totalPrice,
+		"expiration_years": []int{year, year + 1, year + 2, year + 3, year + 4}, // 给购物车页面里信用卡到期年份下拉菜单提供选项数据
 	})); err != nil {
-		log.Println(err)
+		log.Error(err)
 	}
 }
 
+// addToCartHandler 适用于 /cart POST 请求，处理用户添加商品到购物车的请求
 func (fe *frontendServer) addToCartHandler(w http.ResponseWriter, r *http.Request) {
+	productId := r.FormValue("product_id") // 从请求中提取 product_id 参数
+	quantity, _ := strconv.ParseUint(r.FormValue("quantity"), 10, 32)
 
+	payload := validator.AddToCartPayload{
+		ProductID: productId,
+		Quantity:  quantity,
+	}
+	if err := payload.Validate(); err != nil {
+		renderHTTPError(log, r, w, validator.ValidationErrorResponse(err), http.StatusUnprocessableEntity)
+		return
+	}
+	log.WithField("product", payload.ProductID).WithField("quantity", payload.Quantity).Debug("adding to cart")
 
+	p, err := fe.GetProduct(r.Context(), payload.ProductID)
+	if err != nil {
+		renderHTTPError(log, r, w, fmt.Errorf("could not retrieve product: %v", err), http.StatusInternalServerError)
+		return
+	}
+	fe.insertCart(r.Context(), sessionID(r), p.GetId(), int32(quantity))
+	referer := r.Referer() // 获取 Referer 头，得到用户之前所在的页面 URL. 等价于 r.Header.Get("referer")
+	if referer == "" {
+		referer = baseUrl + "/" // 如果没有 Referer 头，就跳转到首页
+	}
+	http.Redirect(w, r, referer, http.StatusSeeOther)
+}
+
+func (fe *frontendServer) emptyCartHandler(w http.ResponseWriter, r *http.Request) {
+	log.Debug("empty cart")
+	err := fe.emptyCart(r.Context(), sessionID(r))
+	if err != nil {
+		renderHTTPError(log, r, w, fmt.Errorf("failed to empty cart: %v", err), http.StatusInternalServerError)
+		return
+	}
+	http.Redirect(w, r, r.Header.Get("Referer"), http.StatusSeeOther)
 }
 
 // 渲染相关的函数
@@ -329,4 +428,40 @@ func (fe *frontendServer) chooseAd(ctx context.Context, ctxKeys []string, log lo
 	res := ads[rand.Intn(len(ads))]
 	log.Debugf("[chooseAd]从 %d 个广告中选择了广告: %v", len(ads), res)
 	return res
+}
+
+// cartIDs 从购物车项列表中提取产品ID列表，供 getRecommendations 调用
+func cartIDs(cartItems []*pb.CartItem) []string {
+	ids := make([]string, len(cartItems))
+	for i, item := range cartItems {
+		ids[i] = item.GetProductId()
+	}
+	return ids
+}
+
+// cartSize 计算购物车中商品的总数量，供模版渲染调用
+func cartSize(c []*pb.CartItem) int {
+	cartSize := 0
+	for _, item := range c {
+		cartSize += int(item.GetQuantity())
+	}
+	return cartSize
+}
+
+func (fe *frontendServer) insertCart(ctx context.Context, userID, productID string, quantity int32) error {
+	_, err := pb.NewCartServiceClient(fe.cartSvcConn).AddItem(ctx, &pb.AddItemRequest{
+		UserId: userID,
+		Item: &pb.CartItem{
+			ProductId: productID,
+			Quantity:  quantity,
+		},
+	})
+	return err
+}
+
+func (fe *frontendServer) emptyCart(ctx context.Context, userID string) error {
+	_, err := pb.NewCartServiceClient(fe.cartSvcConn).EmptyCart(ctx, &pb.EmptyCartRequest{
+		UserId: userID,
+	})
+	return err
 }

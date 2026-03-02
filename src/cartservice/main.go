@@ -49,8 +49,7 @@ func main() {
 		log.Fatalf("failed to initialize cart store: %v", err)
 	}
 
-	var server *grpc.Server
-	server = grpc.NewServer(grpc.StatsHandler(otelgrpc.NewServerHandler()))
+	server := grpc.NewServer(grpc.StatsHandler(otelgrpc.NewServerHandler()))
 	pb.RegisterCartServiceServer(server, NewCartService(store))
 	healthpb.RegisterHealthServer(server, NewHealthCheckService(store))
 

@@ -109,6 +109,7 @@ func main() {
 	r.PathPrefix(baseUrl + "/static/").Handler(http.StripPrefix(baseUrl+"/static/", http.FileServer(http.Dir("./static/")))) // 加载static/目录下的静态资源
 	r.HandleFunc(baseUrl + "/cart", svc.addToCartHandler).Methods(http.MethodPost) // 添加商品到购物车
     r.HandleFunc(baseUrl + "/cart", svc.viewCartHandler).Methods(http.MethodGet, http.MethodHead) // 查看购物车
+	r.HandleFunc(baseUrl + "/cart/empty", svc.emptyCartHandler).Methods(http.MethodPost) // 清空购物车 post
 	var handler http.Handler = r // Router实现了 http.Handler 接口
 
 	log.Infof("starting server on %s:%s", addr, srvPort)

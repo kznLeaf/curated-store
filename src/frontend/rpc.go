@@ -164,3 +164,21 @@ func (fe *frontendServer) getRecommendations(ctx context.Context, userID string,
 	}
 	return out, nil
 }
+
+// getCart 获取用户购物车内容
+//
+// 根据用户 ID 调用购物车服务获取该用户的购物车中所有商品
+//
+// 参数:
+//
+//	ctx - 请求上下文，用于超时控制和取消
+//	userID - 用户的唯一标识符（通常来自 session ID）
+//
+// 返回:
+//
+//	[]*pb.CartItem - 购物车中的商品列表
+//	error - 如果调用失败返回错误
+func (fe *frontendServer) getCart(ctx context.Context, userID string) ([]*pb.CartItem, error) {
+	resp, err := pb.NewCartServiceClient(fe.cartSvcConn).GetCart(ctx, &pb.GetCartRequest{UserId: userID})
+	return resp.GetItems(), err
+}
