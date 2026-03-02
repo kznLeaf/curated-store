@@ -76,6 +76,11 @@ func getEnv(key, defaultValue string) string {
 
 // initCartStore 根据环境变量选择存储后端（优先级：Redis > Spanner > AlloyDB > 内存）
 func initCartStore(ctx context.Context) (cartstore.ICartStore, error) {
+	if redisAddr := os.Getenv("REDIS_ADDR"); redisAddr != "" {
+		log.Info("[cartservice] using Redis cart store")
+		return cartstore.NewRedisCartStore(redisAddr), nil
+	}
+
 	log.Info("[cartservice] using memory cart store (no external storage configured)")
 	return cartstore.NewMemoryCartStore(), nil
 }
