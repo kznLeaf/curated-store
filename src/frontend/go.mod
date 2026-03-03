@@ -5,6 +5,7 @@ go 1.24.0
 require (
 	cloud.google.com/go/compute/metadata v0.9.0
 	github.com/go-playground/validator/v10 v10.30.1
+	github.com/google/uuid v1.6.0
 	google.golang.org/grpc v1.78.0
 	google.golang.org/protobuf v1.36.11
 )

@@ -38,9 +38,8 @@ type frontendServer struct {
 }
 
 const (
-	port            = "8080"
-	defaultCurrency = "USD"
-	cookieMaxAge    = 60 * 60 * 48 // 48小时
+	port         = "8080"
+	cookieMaxAge = 60 * 60 * 48 // 48小时
 
 	// 会话管理: 从 Cookie 中提取 sessionID 作为购物车标识符。
 	cookiePrefix    = "shop_"
@@ -49,13 +48,11 @@ const (
 )
 
 var (
-	log     *logrus.Logger
 	baseUrl = ""
 )
 
-func init() {
-	// 设置日志
-	log = logrus.New()
+func main() {
+	log := logrus.New()
 	log.Level = logrus.DebugLevel
 	log.Formatter = &logrus.JSONFormatter{
 		FieldMap: logrus.FieldMap{
@@ -66,9 +63,6 @@ func init() {
 		TimestampFormat: time.RFC3339Nano,
 	}
 	log.Out = os.Stdout
-}
-
-func main() {
 	ctx := context.Background()
 
 	svc := new(frontendServer)
@@ -107,11 +101,12 @@ func main() {
 	r.HandleFunc(baseUrl+"/setCurrency", svc.setCurrencyHandler).Methods(http.MethodPost)                             // 用户手动切换货币
 	r.HandleFunc(baseUrl+"/cart", svc.viewCartHandler).Methods(http.MethodGet, http.MethodHead)
 	r.PathPrefix(baseUrl + "/static/").Handler(http.StripPrefix(baseUrl+"/static/", http.FileServer(http.Dir("./static/")))) // 加载static/目录下的静态资源
-	r.HandleFunc(baseUrl + "/cart", svc.addToCartHandler).Methods(http.MethodPost) // 添加商品到购物车
-    r.HandleFunc(baseUrl + "/cart", svc.viewCartHandler).Methods(http.MethodGet, http.MethodHead) // 查看购物车
-	r.HandleFunc(baseUrl + "/cart/empty", svc.emptyCartHandler).Methods(http.MethodPost) // 清空购物车 post
-	var handler http.Handler = r // Router实现了 http.Handler 接口
-
+	r.HandleFunc(baseUrl+"/cart", svc.addToCartHandler).Methods(http.MethodPost)                                             // 添加商品到购物车
+	r.HandleFunc(baseUrl+"/cart", svc.viewCartHandler).Methods(http.MethodGet, http.MethodHead)                              // 查看购物车
+	r.HandleFunc(baseUrl+"/cart/empty", svc.emptyCartHandler).Methods(http.MethodPost)                                       // 清空购物车 post
+	var handler http.Handler = r
+	handler = &logHandler{log: log, next: handler} // Router实现了 http.Handler 接口
+	handler = ensureSessionID(handler)             // 注入 sessionID 管理中间件
 	log.Infof("starting server on %s:%s", addr, srvPort)
 
 	// 启动 HTTP 服务器。传入handler，这样每次收到HTTP请求自动调用中间件链和路由规则

@@ -43,6 +43,8 @@ type ctxKeySessionID struct{}
 type ctxKeyRequestID struct{}
 
 func (fe *frontendServer) homeHandler(w http.ResponseWriter, r *http.Request) {
+	log := r.Context().Value(ctxKeyLog{}).(logrus.FieldLogger)
+
 	log.WithField("[homehandler]currency", currentCurrency(r)).Info("home")
 
 	currencies, err := fe.getCurrencies(r.Context())
@@ -139,6 +141,8 @@ func (plat *platformDetails) setPlatformDetails(env string) {
 }
 
 func (fe *frontendServer) productHandler(w http.ResponseWriter, r *http.Request) {
+	log := r.Context().Value(ctxKeyLog{}).(logrus.FieldLogger)
+
 	id := mux.Vars(r)["id"]
 	if id == "" {
 		renderHTTPError(log, r, w, errors.New("product id not specified"), http.StatusBadRequest)
@@ -194,6 +198,8 @@ func (fe *frontendServer) productHandler(w http.ResponseWriter, r *http.Request)
 
 // setCurrencyHandler 实现用户手动选择货币种类。请求路径：/setCurrency POST. 详见 header.html: 73
 func (fe *frontendServer) setCurrencyHandler(w http.ResponseWriter, r *http.Request) {
+	log := r.Context().Value(ctxKeyLog{}).(logrus.FieldLogger)
+
 	cur := r.FormValue("currency_code")                    // 自动从请求中提取名为 currency_code 的参数，无需关心请求方式是POST还是GET
 	payload := validator.SetCurrencyPayload{Currency: cur} // 构造一个 SetCurrencyPayload 对象，包含用户选择的货币代码
 	// 下面执行校验
@@ -223,6 +229,8 @@ func (fe *frontendServer) setCurrencyHandler(w http.ResponseWriter, r *http.Requ
 
 // viewCartHandler 适用于 /cart GET HEAD请求
 func (fe *frontendServer) viewCartHandler(w http.ResponseWriter, r *http.Request) {
+	log := r.Context().Value(ctxKeyLog{}).(logrus.FieldLogger)
+
 	log.Debug("view cart")
 
 	currencies, err := fe.getCurrencies(r.Context())
@@ -299,6 +307,8 @@ func (fe *frontendServer) viewCartHandler(w http.ResponseWriter, r *http.Request
 
 // addToCartHandler 适用于 /cart POST 请求，处理用户添加商品到购物车的请求
 func (fe *frontendServer) addToCartHandler(w http.ResponseWriter, r *http.Request) {
+	log := r.Context().Value(ctxKeyLog{}).(logrus.FieldLogger)
+
 	productId := r.FormValue("product_id") // 从请求中提取 product_id 参数
 	quantity, _ := strconv.ParseUint(r.FormValue("quantity"), 10, 32)
 
@@ -326,6 +336,8 @@ func (fe *frontendServer) addToCartHandler(w http.ResponseWriter, r *http.Reques
 }
 
 func (fe *frontendServer) emptyCartHandler(w http.ResponseWriter, r *http.Request) {
+	log := r.Context().Value(ctxKeyLog{}).(logrus.FieldLogger)
+
 	log.Debug("empty cart")
 	err := fe.emptyCart(r.Context(), sessionID(r))
 	if err != nil {
@@ -352,6 +364,7 @@ func renderHTTPError(log logrus.FieldLogger, r *http.Request, w http.ResponseWri
 }
 
 func renderCurrencyLogo(currencyCode string) string {
+
 	logos := map[string]string{
 		"USD": "$",
 		"HKD": "HK$",
