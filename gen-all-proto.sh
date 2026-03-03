@@ -12,6 +12,7 @@ SERVICES=(
   "src/recommendationservice"
   "src/emailservice"
   "src/cartservice"
+  "src/checkoutservice"
 )
 
 for service in "${SERVICES[@]}"; do

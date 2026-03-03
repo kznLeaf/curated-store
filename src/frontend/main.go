@@ -104,7 +104,7 @@ func main() {
 	r.HandleFunc(baseUrl+"/cart", svc.addToCartHandler).Methods(http.MethodPost)                                             // 添加商品到购物车
 	r.HandleFunc(baseUrl+"/cart", svc.viewCartHandler).Methods(http.MethodGet, http.MethodHead)                              // 查看购物车
 	r.HandleFunc(baseUrl+"/cart/empty", svc.emptyCartHandler).Methods(http.MethodPost)                                       // 清空购物车 post
-	var handler http.Handler = r
+	var handler http.Handler = r // r 实现了 http.Handler 接口，属于业务Handler
 	handler = &logHandler{log: log, next: handler} // Router实现了 http.Handler 接口
 	handler = ensureSessionID(handler)             // 注入 sessionID 管理中间件
 	log.Infof("starting server on %s:%s", addr, srvPort)

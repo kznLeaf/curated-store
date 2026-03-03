@@ -13,6 +13,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// 中间件，通过装饰起模式实现了会话管理和日志记录的功能。
+// 先执行 ensureSessionID 中间件，确保每个请求都有一个 sessionID，并将其注入到请求上下文中；
+// 再执行 logHandler 中间件，记录请求的基本信息（路径、方法、请求 ID、会话 ID）以及请求完成时的状态码、响应大小和处理耗时等信息。
+
 package main
 
 import (
@@ -30,6 +34,7 @@ type logHandler struct {
 	next http.Handler
 }
 
+// responseRecorder 实现了http.ResponseWriter接口，用于构建HTTP响应
 type responseRecorder struct {
 	b      int
 	status int
@@ -53,54 +58,20 @@ func (r *responseRecorder) WriteHeader(statusCode int) {
 }
 
 // ServeHTTP 实现 http.Handler 接口，作为日志记录中间件处理 HTTP 请求。
-//
-// 主要功能：
-// 1. 为每个请求生成唯一的请求 ID（UUID）
-// 2. 记录请求的详细信息（路径、方法、请求ID、会话ID）
-// 3. 测量并记录请求处理时间
-// 4. 记录响应状态码和响应体大小
-// 5. 将配置好的 logger 注入到请求上下文中，供后续 handler 使用
-//
-// 日志记录采用结构化日志（logrus），包含以下字段：
-//
-// - http.req.path: 请求路径
-// - http.req.method: 请求方法（GET/POST 等）
-// - http.req.id: 唯一请求标识符
-// - session: 会话 ID（如果存在）
-// - http.resp.took_ms: 请求处理耗时（毫秒）
-// - http.resp.status: HTTP 响应状态码
-// - http.resp.bytes: 响应体字节数
-//
-// 这个中间件在整个请求链中的位置：
-//
-// HTTP 请求
-// ↓
-// logHandler (当前中间件) ← 记录请求日志
-//     ├─ 生成 requestID
-//     ├─ 记录请求开始
-//     ├─ 注入 logger 到上下文
-//     └─ 调用 next handler
-//         ↓
-// ensureSessionID 中间件
-//         ↓
-// 路由 handler (如 homeHandler)
-//         ↓
-// 响应返回
-//         ↓
-// defer 执行：记录请求完成日志
+// 每当服务器收到一个新的请求，都会单独打开一个 goroutine 调用这个函数来处理请求。
 func (lh *logHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// 1. 获取请求上下文并生成唯一的请求 ID
 	ctx := r.Context()
 	requestID, _ := uuid.NewRandom()
-	// 将请求 ID 注入到上下文中，供后续链路追踪使用
-	ctx = context.WithValue(ctx, ctxKeyRequestID{}, requestID.String())
+	// 将请求 ID 注入到上下文中，供后续链路追踪使用。注意这里是 ctxKeyRequestID，用于日志记录，而不是 ctxKeySessionID 用于会话管理。
+	ctx = context.WithValue(ctx, ctxKeyRequestID{}, requestID.String()) 
 
 	// 2. 记录请求开始时间，用于计算处理耗时
 	start := time.Now()
 	// 使用 responseRecorder 包装原始的 ResponseWriter，以便记录响应状态码和字节数
 	rr := &responseRecorder{w: w}
 	
-	// 3. 创建带有请求基本信息的结构化日志记录器
+	// 3. 每次打日志时自动带上下面三个字段
 	log := lh.log.WithFields(logrus.Fields{
 		"http.req.path":   r.URL.Path,        // 请求路径，如 /product/123
 		"http.req.method": r.Method,          // 请求方法，如 GET、POST
@@ -132,7 +103,7 @@ func (lh *logHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	
 	// 8. 调用下一个 handler（中间件链模式）
 	// 使用 responseRecorder 而不是原始的 ResponseWriter，以便记录响应信息
-	lh.next.ServeHTTP(rr, r)
+	lh.next.ServeHTTP(rr, r) // 调用 mux，开始执行业务逻辑
 }
 
 // ensureSessionID 确保会话ID存在，并将会话 ID 保存到 context 中。
@@ -172,6 +143,6 @@ func ensureSessionID(next http.Handler) http.HandlerFunc {
 		// 将 sessionID 设置到请求上下文中，后续处理函数可以获取到
 		ctx := context.WithValue(r.Context(), ctxKeySessionID{}, sessionID)
 		r = r.WithContext(ctx)
-		next.ServeHTTP(w, r)
+		next.ServeHTTP(w, r) // 调用 ServeHTTP
 	}
 }

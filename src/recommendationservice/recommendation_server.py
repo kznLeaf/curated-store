@@ -14,7 +14,8 @@ logger = getJSONLogger("recommendationservice-server")
 
 # gRPC server class， implements recommendation service
 # 实现了三个方法：ListRecommendations、Check、Watch
-# TODO 目前的 ListRecommendations 实现虽然要求传入userID，但是实际上并没有用到。后续可以给予用户ID做个性化推荐
+# TODO 目前的 ListRecommendations 实现虽然要求传入userID，但是实际上并没有用到。后续可以给予用户ID做个性化推荐; 推荐的商品中没有排除当前
+# 产品页的商品，需要手动排除
 class RecommendationService(demo_pb2_grpc.RecommendationServiceServicer):
     def ListRecommendations(self, request, context):
         max_responses = 5
