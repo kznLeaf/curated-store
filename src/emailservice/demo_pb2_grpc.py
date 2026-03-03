@@ -909,3 +909,81 @@ class CartService(object):
             timeout,
             metadata,
             _registered_method=True)
+
+
+class CheckoutServiceStub(object):
+    """-------------Checkout service-----------------
+
+    """
+
+    def __init__(self, channel):
+        """Constructor.
+
+        Args:
+            channel: A grpc.Channel.
+        """
+        self.PlaceOrder = channel.unary_unary(
+                '/hipstershop.CheckoutService/PlaceOrder',
+                request_serializer=demo__pb2.PlaceOrderRequest.SerializeToString,
+                response_deserializer=demo__pb2.PlaceOrderResponse.FromString,
+                _registered_method=True)
+
+
+class CheckoutServiceServicer(object):
+    """-------------Checkout service-----------------
+
+    """
+
+    def PlaceOrder(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+
+def add_CheckoutServiceServicer_to_server(servicer, server):
+    rpc_method_handlers = {
+            'PlaceOrder': grpc.unary_unary_rpc_method_handler(
+                    servicer.PlaceOrder,
+                    request_deserializer=demo__pb2.PlaceOrderRequest.FromString,
+                    response_serializer=demo__pb2.PlaceOrderResponse.SerializeToString,
+            ),
+    }
+    generic_handler = grpc.method_handlers_generic_handler(
+            'hipstershop.CheckoutService', rpc_method_handlers)
+    server.add_generic_rpc_handlers((generic_handler,))
+    server.add_registered_method_handlers('hipstershop.CheckoutService', rpc_method_handlers)
+
+
+ # This class is part of an EXPERIMENTAL API.
+class CheckoutService(object):
+    """-------------Checkout service-----------------
+
+    """
+
+    @staticmethod
+    def PlaceOrder(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/hipstershop.CheckoutService/PlaceOrder',
+            demo__pb2.PlaceOrderRequest.SerializeToString,
+            demo__pb2.PlaceOrderResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
