@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"math/rand"
@@ -78,6 +77,12 @@ func (fe *frontendServer) homeHandler(w http.ResponseWriter, r *http.Request) {
 		ps[i] = productView{p, price}
 	}
 
+	cart, err := fe.getCart(r.Context(), sessionID(r))
+	if err != nil {
+		renderHTTPError(log, r, w, errors.New("could not retrieve cart"), http.StatusInternalServerError)
+		return
+	}
+
 	// 设置平台信息
 	var env = os.Getenv("ENV_PLATFORM") // 如果没有该环境变量，说明是local环境。GCP会设置该环境变量.
 	if env == "" || !stringinSlice(validEnvs, env) {
@@ -99,8 +104,9 @@ func (fe *frontendServer) homeHandler(w http.ResponseWriter, r *http.Request) {
 		"show_currency": true,
 		"currencies":    currencies,
 		"products":      ps,
-		"banner_color":  os.Getenv("BANNER_COLOR"), // TODO  cart_size
-		"ad":            nil,                       // home.html 里完全没有调用 {{ template "text_ad" }} 的代码，这里实际上是一个无效传入。
+		"banner_color":  os.Getenv("BANNER_COLOR"),
+		"cart_size":     cartSize(cart),
+		"ad":            nil, // FIXME home.html 里完全没有调用 {{ template "text_ad" }} 的代码，这里实际上是一个无效传入。
 	})); err != nil {
 		log.Error(err)
 	}
@@ -185,6 +191,12 @@ func (fe *frontendServer) productHandler(w http.ResponseWriter, r *http.Request)
 		Price *pb.Money
 	}{product, price}
 
+	cart, err := fe.getCart(r.Context(), sessionID(r))
+	if err != nil {
+		renderHTTPError(log, r, w, errors.New("could not retrieve cart"), http.StatusInternalServerError)
+		return
+	}
+
 	// 渲染 product.html 模板，把填充后的页面写入 r
 	if err := templates.ExecuteTemplate(w, "product", injectCommonTemplateData(r, map[string]interface{}{
 		"ad":              fe.chooseAd(r.Context(), product.Categories, log),
@@ -192,7 +204,7 @@ func (fe *frontendServer) productHandler(w http.ResponseWriter, r *http.Request)
 		"product":         wrappedProduct,
 		"currencies":      currencies,
 		"recommendations": recommendations,
-		// TODO packagingInfo cart_size 待补充
+		"cart_size":       cartSize(cart), // TODO packingInfo
 	})); err != nil {
 		log.Println(err)
 	}
@@ -295,7 +307,6 @@ func (fe *frontendServer) viewCartHandler(w http.ResponseWriter, r *http.Request
 
 	if err := templates.ExecuteTemplate(w, "cart", injectCommonTemplateData(r, map[string]interface{}{
 		"currencies":       currencies,
-		"cart":             cartItems,
 		"recommendations":  recommendations,
 		"shipping_cost":    shippingCost,
 		"cart_size":        cartSize(cartItems),
@@ -584,51 +595,11 @@ func renderTopValidationPopup(r *http.Request, w http.ResponseWriter, err error,
 		referer = baseUrl + "/"
 	}
 
-	// 用 json.Marshal 而不是 strconv.Quote，确保 </script> 等字符被安全转义，防止 XSS
-	msgBytes, _ := json.Marshal("输入有误：" + err.Error())
-	targetBytes, _ := json.Marshal(referer)
+	// 在 URL 中添加 validation_error 参数，值为错误信息，这样前端页面就可以读取这个参数并显示弹窗
+	redirectURL, _ := url.Parse(referer)
+	q := redirectURL.Query()
+	q.Set("validation_error", err.Error())
+	redirectURL.RawQuery = q.Encode()
 
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.WriteHeader(code)
-
-	_, _ = fmt.Fprintf(w, `<!doctype html>
-<html>
-<head>
-<meta charset="utf-8" />
-<title>Validation Error</title>
-<style>
-	.top-toast{
-		position:fixed;
-		top:16px;
-		left:50%%;
-		transform:translateX(-50%%);
-		background:#fff3cd;
-		color:#664d03;
-		border:1px solid #ffecb5;
-		padding:12px 16px;
-		border-radius:8px;
-		z-index:9999;
-		box-shadow:0 6px 20px rgba(0,0,0,.12);
-		font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
-		max-width:80vw;
-	}
-</style>
-</head>
-<body>
-<script>
-	(function () {
-		var msg = %s;
-		var target = %s;
-		var toast = document.createElement("div");
-		toast.className = "top-toast";
-		toast.textContent = msg;
-		document.body.appendChild(toast);
-
-		setTimeout(function () {
-			window.location.href = target;
-		}, 1500);
-	})();
-</script>
-</body>
-</html>`, string(msgBytes), string(targetBytes))
+	http.Redirect(w, r, redirectURL.String(), http.StatusSeeOther)
 }

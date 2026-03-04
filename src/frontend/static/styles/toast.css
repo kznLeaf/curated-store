@@ -1,0 +1,12 @@
+.top-toast {
+    position: fixed; top: 16px; left: 50%; transform: translateX(-50%);
+    background: #fff3cd; color: #664d03; border: 1px solid #ffecb5;
+    padding: 12px 24px; border-radius: 8px; z-index: 9999;
+    box-shadow: 0 6px 20px rgba(0,0,0,.15);
+    font-family: system-ui, -apple-system, sans-serif;
+    animation: slideIn 0.3s ease-out;
+}
+@keyframes slideIn {
+    from { top: -50px; opacity: 0; }
+    to { top: 16px; opacity: 1; }
+}

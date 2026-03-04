@@ -19,25 +19,27 @@
 <footer class="py-5">
     <div class="footer-top">
         <div class="container footer-social">
-            <p class="footer-text">This website is hosted for demo purposes only. It is not an actual shop. This is not a Google product.</p>
-            <p class="footer-text">© 2020-{{ .currentYear }} Google LLC (<a href="https://github.com/GoogleCloudPlatform/microservices-demo">Source Code</a>)</p>
+            <p class="footer-text">This website is hosted for demo purposes only. It is not an actual shop. This is not
+                a Google product.</p>
+            <p class="footer-text">© 2020-{{ .currentYear }} Google LLC (<a
+                    href="https://github.com/GoogleCloudPlatform/microservices-demo">Source Code</a>)</p>
             <p class="footer-text">
                 <small>
                     {{ if $.session_id }}session-id: {{ $.session_id }} — {{end}}
                     {{ if $.request_id }}request-id: {{ $.request_id }}{{end}}
                 </small>
-                <br/>
+                <br />
                 <small>
                     {{ if $.deploymentDetails }}
-                        {{ if index .deploymentDetails "CLUSTERNAME" }}
-                        <b>Cluster: </b>{{ index .deploymentDetails "CLUSTERNAME" }}<br/>
-                        {{ end }}
-                        {{ if index .deploymentDetails "ZONE" }}
-                        <b>Zone: </b>{{ index .deploymentDetails "ZONE" }}<br/>
-                        {{ end }}
-                        {{ if index .deploymentDetails "HOSTNAME" }}
-                        <b>Pod: </b>{{ index .deploymentDetails "HOSTNAME" }}
-                        {{ end }}
+                    {{ if index .deploymentDetails "CLUSTERNAME" }}
+                    <b>Cluster: </b>{{ index .deploymentDetails "CLUSTERNAME" }}<br />
+                    {{ end }}
+                    {{ if index .deploymentDetails "ZONE" }}
+                    <b>Zone: </b>{{ index .deploymentDetails "ZONE" }}<br />
+                    {{ end }}
+                    {{ if index .deploymentDetails "HOSTNAME" }}
+                    <b>Pod: </b>{{ index .deploymentDetails "HOSTNAME" }}
+                    {{ end }}
                     {{ else }}
                     Deployment details are still loading.
                     Try refreshing this page.
@@ -50,6 +52,38 @@
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"
     integrity="sha384-smHYKdLADwkXOn1EmN1qk/HfnUcbVRZyYmZ4qpPea6sjB/pTJ0euyQp0Mk8ck+5T" crossorigin="anonymous">
 </script>
+
+<script>
+    (function () {
+        // 1. 检查 URL 中是否有校验错误参数
+        const params = new URLSearchParams(window.location.search); // 把 ? 后面的字符串（如 ?a=1&b=2），转成可操作对象
+        const error = params.get('validation_error'); // 获取 validation_error 参数的值，如果没有则返回 null
+
+        if (error) {
+            // 2. 创建并渲染弹窗
+            const toast = document.createElement("div");
+            toast.className = "top-toast";
+            toast.textContent = "⚠️ " + error;
+            document.body.appendChild(toast);
+
+            // 3. 3秒后自动消失
+            setTimeout(() => {
+                toast.style.transition = "opacity 0.5s";
+                toast.style.opacity = "0";
+                setTimeout(() => toast.remove(), 500);
+            }, 3000);
+
+            // 4. 清理 URL 参数而不刷新页面
+            params.delete('validation_error');
+            const newQuery = params.toString() ? '?' + params.toString() : '';
+            const newUrl = window.location.pathname + newQuery + window.location.hash;
+
+            // 使用 replaceState 替换当前历史记录
+            window.history.replaceState(null, '', newUrl);
+        }
+    })();
+</script>
+
 </body>
 
 </html>
