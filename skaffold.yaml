@@ -23,6 +23,8 @@ build:
     context: src/emailservice
   - image: cartservice
     context: src/cartservice
+  - image: checkoutservice
+    context: src/checkoutservice
   tagPolicy:
     gitCommit: {}
   local:

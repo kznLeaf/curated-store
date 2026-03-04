@@ -70,9 +70,9 @@ func (s *server) GetQuote(ctx context.Context, in *pb.GetQuoteRequest) (*pb.GetQ
 
 	return &pb.GetQuoteResponse{ // TODO 目前运费服务返回的是固定的运费，后续再完善这些逻辑
 		CostUsd: &pb.Money{
-			CurrencyCode: "USD",
-			Units:        int64(17),
-			Nanos:        int32(1 * 10000000)},
+			CurrencyCode: "JPY",
+			Units:        int64(350),
+			Nanos:        int32(0)},
 	}, nil
 }
 

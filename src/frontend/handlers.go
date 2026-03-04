@@ -478,3 +478,90 @@ func (fe *frontendServer) emptyCart(ctx context.Context, userID string) error {
 	})
 	return err
 }
+
+func (fe *frontendServer) placeOrderHandler(w http.ResponseWriter, r *http.Request) {
+	log := r.Context().Value(ctxKeyLog{}).(logrus.FieldLogger)
+	log.Debug("placing order")
+	// 解析表单数据
+	var (
+		email         = r.FormValue("email")
+		streetAddress = r.FormValue("street_address")
+		zipCode, _    = strconv.ParseInt(r.FormValue("zip_code"), 10, 32)
+		city          = r.FormValue("city")
+		state         = r.FormValue("state")
+		country       = r.FormValue("country")
+		ccNumber      = r.FormValue("credit_card_number")
+		ccMonth, _    = strconv.ParseInt(r.FormValue("credit_card_expiration_month"), 10, 32)
+		ccYear, _     = strconv.ParseInt(r.FormValue("credit_card_expiration_year"), 10, 32)
+		ccCVV, _      = strconv.ParseInt(r.FormValue("credit_card_cvv"), 10, 32)
+	)
+	// 创建 PlaceOrderPayload 对象
+	payload := validator.PlaceOrderPayload{
+		Email:         email,
+		StreetAddress: streetAddress,
+		ZipCode:       zipCode,
+		City:          city,
+		State:         state,
+		Country:       country,
+		CcNumber:      ccNumber,
+		CcMonth:       ccMonth,
+		CcYear:        ccYear,
+		CcCVV:         ccCVV,
+	}
+	// 验证表单数据，验证规则：
+	if err := payload.Validate(); err != nil {
+		renderHTTPError(log, r, w, validator.ValidationErrorResponse(err), http.StatusUnprocessableEntity)
+		return
+	}
+
+	order, err := pb.NewCheckoutServiceClient(fe.checkoutSvcConn).PlaceOrder(
+		r.Context(), &pb.PlaceOrderRequest{
+			Email: payload.Email,
+			CreditCard: &pb.CreditCardInfo{
+				CreditCardNumber:          payload.CcNumber,
+				CreditCardExpirationMonth: int32(payload.CcMonth),
+				CreditCardExpirationYear:  int32(payload.CcYear),
+				CreditCardCvv:             int32(payload.CcCVV)},
+			UserId:       sessionID(r),
+			UserCurrency: currentCurrency(r),
+			Address: &pb.Address{
+				StreetAddress: payload.StreetAddress,
+				City:          payload.City,
+				State:         payload.State,
+				ZipCode:       int32(payload.ZipCode),
+				Country:       payload.Country},
+		})
+	if err != nil {
+		renderHTTPError(log, r, w, fmt.Errorf("failed to complete the order: %v", err), http.StatusInternalServerError)
+		return
+	}
+	log.WithField("order", order.GetOrder().GetOrderId()).Info("order placed")
+
+	recommendations, _ := fe.getRecommendations(r.Context(), sessionID(r), nil)
+
+	// 计算总支付金额
+	totalPaid := order.GetOrder().GetShippingCost()
+	for _, v := range order.GetOrder().GetItems() {
+		multPrice := money.MultiplySlow(v.GetCost(), uint32(v.GetItem().GetQuantity()))
+		totalPaid = money.Must(money.Sum(totalPaid, multPrice))
+	}
+
+	// 获取可用货币列表
+	currencies, err := fe.getCurrencies(r.Context())
+	if err != nil {
+		renderHTTPError(log, r, w, fmt.Errorf("could not retrieve currencies: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	// 渲染订单确认页
+	if err := templates.ExecuteTemplate(w, "order", injectCommonTemplateData(r, map[string]interface{}{
+		"show_currency":   false,
+		"currencies":      currencies,
+		"order":           order.GetOrder(),
+		"total_paid":      &totalPaid,
+		"recommendations": recommendations,
+	})); err != nil {
+		log.Println(err)
+	}
+
+}

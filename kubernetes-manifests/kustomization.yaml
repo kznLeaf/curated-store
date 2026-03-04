@@ -26,7 +26,7 @@ resources:
  - components.yaml # 用来把 metrics-server 的组件部署到集群中
  - emailservice.yaml
  - cartservice.yaml
-#  - checkoutservice.yaml
+ - checkoutservice.yaml
 # - loadgenerator.yaml # During development, the loadgenerator module inside skaffold.yaml will be used.
 
 # components:
