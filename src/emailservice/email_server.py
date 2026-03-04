@@ -45,20 +45,18 @@ class BaseEmailService:
 
 class DummyEmailService(BaseEmailService):
     def SendOrderConfirmation(self, request, context):
-        logger.info(
-            "[email service][Recv SendOrderConfirmation] order_id={}, email={}".format(
-                request.order_id, request.email
-            )
-        )
+        logger.info('A request to send order confirmation email to {} has been received.'.format(request.email))
+
         return demo_pb2.Empty()
 
 
 if __name__ == "__main__":
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+    service = DummyEmailService()
     demo_pb2_grpc.add_EmailServiceServicer_to_server(
-        DummyEmailService(), server
+        service, server
     )  # TODO 这里应该实现真正的 EmailService，而不是 DummyEmailService
-    health_pb2_grpc.add_HealthServicer_to_server(DummyEmailService(), server)
+    health_pb2_grpc.add_HealthServicer_to_server(service, server)
 
     port = os.environ.get("PORT", "8080")
 
