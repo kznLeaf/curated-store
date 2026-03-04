@@ -2,11 +2,13 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"math/rand"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -317,7 +319,8 @@ func (fe *frontendServer) addToCartHandler(w http.ResponseWriter, r *http.Reques
 		Quantity:  quantity,
 	}
 	if err := payload.Validate(); err != nil {
-		renderHTTPError(log, r, w, validator.ValidationErrorResponse(err), http.StatusUnprocessableEntity)
+		log.WithField("validation_error", err).Warn("add to cart validation failed")
+		renderTopValidationPopup(r, w, validator.ValidationErrorResponse(err), http.StatusUnprocessableEntity)
 		return
 	}
 	log.WithField("product", payload.ProductID).WithField("quantity", payload.Quantity).Debug("adding to cart")
@@ -510,7 +513,8 @@ func (fe *frontendServer) placeOrderHandler(w http.ResponseWriter, r *http.Reque
 	}
 	// 验证表单数据，验证规则：
 	if err := payload.Validate(); err != nil {
-		renderHTTPError(log, r, w, validator.ValidationErrorResponse(err), http.StatusUnprocessableEntity)
+		log.WithField("validation_error", err).Warn("place order validation failed")
+		renderTopValidationPopup(r, w, validator.ValidationErrorResponse(err), http.StatusUnprocessableEntity)
 		return
 	}
 
@@ -564,4 +568,67 @@ func (fe *frontendServer) placeOrderHandler(w http.ResponseWriter, r *http.Reque
 		log.Println(err)
 	}
 
+}
+
+// renderTopValidationPopup 在用户输入有误时，渲染一个包含错误信息的弹窗，并引导用户返回之前的页面继续操作
+func renderTopValidationPopup(r *http.Request, w http.ResponseWriter, err error, code int) {
+	log.WithField("validation_error", err).Warn("form validation failed")
+
+	referer := r.Referer()
+	if referer == "" {
+		referer = baseUrl + "/"
+	}
+
+	// 校验 referer，防止开放重定向
+	if u, parseErr := url.Parse(referer); parseErr != nil || (u.Host != "" && u.Host != r.Host) {
+		referer = baseUrl + "/"
+	}
+
+	// 用 json.Marshal 而不是 strconv.Quote，确保 </script> 等字符被安全转义，防止 XSS
+	msgBytes, _ := json.Marshal("输入有误：" + err.Error())
+	targetBytes, _ := json.Marshal(referer)
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.WriteHeader(code)
+
+	_, _ = fmt.Fprintf(w, `<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>Validation Error</title>
+<style>
+	.top-toast{
+		position:fixed;
+		top:16px;
+		left:50%%;
+		transform:translateX(-50%%);
+		background:#fff3cd;
+		color:#664d03;
+		border:1px solid #ffecb5;
+		padding:12px 16px;
+		border-radius:8px;
+		z-index:9999;
+		box-shadow:0 6px 20px rgba(0,0,0,.12);
+		font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+		max-width:80vw;
+	}
+</style>
+</head>
+<body>
+<script>
+	(function () {
+		var msg = %s;
+		var target = %s;
+		var toast = document.createElement("div");
+		toast.className = "top-toast";
+		toast.textContent = msg;
+		document.body.appendChild(toast);
+
+		setTimeout(function () {
+			window.location.href = target;
+		}, 1500);
+	})();
+</script>
+</body>
+</html>`, string(msgBytes), string(targetBytes))
 }
