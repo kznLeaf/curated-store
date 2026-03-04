@@ -18,6 +18,11 @@ type currencyService struct {
 	rates map[string]float64
 }
 
+// noDecimalCurrencies 列出所有没有小数位的货币
+var noDecimalCurrencies = map[string]bool{
+	"JPY": true,
+}
+
 // GetSupportedCurrencies rpc 返回支持的货币代码列表。
 func (c *currencyService) GetSupportedCurrencies(ctx context.Context, req *pb.Empty) (*pb.GetSupportedCurrenciesResponse, error) {
 	log.Info("[CurrencyService] GetSupportedCurrencies invoked")
@@ -35,11 +40,6 @@ func (s *currencyService) Convert(ctx context.Context, req *pb.CurrencyConversio
 	if from == nil {
 		return nil, status.Error(codes.InvalidArgument, "from money is required")
 	}
-	// from = &pb.Money{
-	// 	CurrencyCode: "JPY",
-	// 	Units:        from.GetUnits(),
-	// 	Nanos:        from.GetNanos(),
-	// }
 
 	fromRate, ok := s.rates[from.GetCurrencyCode()] // 获取源货币的汇率
 	if !ok {
@@ -50,21 +50,37 @@ func (s *currencyService) Convert(ctx context.Context, req *pb.CurrencyConversio
 		return nil, status.Errorf(codes.InvalidArgument, "unsupported currency: %s", req.GetToCode())
 	}
 
+	fromNanos := from.GetNanos()
+	if noDecimalCurrencies[from.GetCurrencyCode()] {
+		fromNanos = 0 // 对于没有小数位的货币，强制将nanos设为0
+	}
+
 	// Step 1: Convert from source currency → USD
 	UsdUnits := float64(from.GetUnits()) / fromRate
-	UsdNanos := float64(from.GetNanos()) / fromRate
+	UsdNanos := float64(fromNanos) / fromRate
 	Usds := carry(UsdUnits, math.Round(UsdNanos))
 
 	// Step 2: Convert USD → target currency
 	resultUnits := Usds.units * toRate
 	resultNanos := Usds.nanos * toRate
 	result := carry(resultUnits, resultNanos)
-	// log.Infof("[currencyservice]货币转换成功")
+
+	var finalUnits int64
+	var finalNanos int32
+	if noDecimalCurrencies[req.GetToCode()] {
+		// 对于没有小数位的货币，四舍五入到最接近的整数单位
+		total := result.units + result.nanos/1e9
+		finalUnits = int64(math.Round(total))
+		finalNanos = 0
+	} else {
+		finalUnits = int64(math.Floor(result.units))
+		finalNanos = int32(math.Floor(result.nanos))
+	}
 
 	money := &pb.Money{
 		CurrencyCode: req.GetToCode(),
-		Units:        int64(math.Floor(result.units)),
-		Nanos:        int32(math.Floor(result.nanos)),
+		Units:        finalUnits,
+		Nanos:        finalNanos,
 	}
 	log.Debugf("[currencyservice]successfully converted %d.%09d %s to %d.%09d %s",
 		from.GetUnits(), from.GetNanos(), from.GetCurrencyCode(),
