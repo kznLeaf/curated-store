@@ -18,7 +18,7 @@ func main() {
 	}
 
 	go run(port)
-	log.Info("[shipping]starting grpc server at :%s", port)
+	log.Infof("[shipping]starting grpc server at :%s", port)
 	select {}
 }
 
