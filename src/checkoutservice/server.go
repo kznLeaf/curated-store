@@ -8,6 +8,7 @@ import (
 	"time"
 
 	pb "github.com/kznLeaf/curated-store/src/checkoutservice/genproto"
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 
 	// "go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
@@ -18,7 +19,6 @@ import (
 
 const (
 	listenPort  = "5050" // 默认监听端口
-	usdCurrency = "USD"  // 默认货币单位
 )
 
 var log *logrus.Logger
@@ -70,13 +70,13 @@ func main() {
 		log.Fatal(err)
 	}
 
-	var srv *grpc.Server
+	server := grpc.NewServer(grpc.StatsHandler(otelgrpc.NewServerHandler()))
 
 	// 注册服务实现和健康检查
-	pb.RegisterCheckoutServiceServer(srv, svc)
-	healthpb.RegisterHealthServer(srv, svc)
+	pb.RegisterCheckoutServiceServer(server, svc)
+	healthpb.RegisterHealthServer(server, svc)
 	log.Infof("starting to listen on tcp: %q", lis.Addr().String())
-	err = srv.Serve(lis)
+	err = server.Serve(lis)
 	log.Fatal(err)
 
 }
