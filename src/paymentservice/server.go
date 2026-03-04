@@ -45,14 +45,14 @@ func (p *paymentServer) Watch(req *healthpb.HealthCheckRequest, ws healthpb.Heal
 }
 
 func (s *paymentServer) Charge(_ context.Context, req *pb.ChargeRequest) (*pb.ChargeResponse, error) {
-	log.Debug("PaymentService Charge invoked")
+	log.Info("[PaymentService] Charge invoked")
 	resp, err := charge(req)
 	if err != nil {
 		if cardErr, ok := err.(*creditCardError); ok {
-			log.Warn("charge failed", "reason", cardErr.msg)
+			log.WithField("reason", cardErr.msg).Warn("charge failed")
 			return nil, status.Error(codes.InvalidArgument, cardErr.msg)
 		}
-		log.Error("unexpected charge error", "error", err)
+		log.WithError(err).Error("unexpected charge error")
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 	return resp, nil

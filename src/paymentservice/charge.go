@@ -77,7 +77,7 @@ func charge(req *pb.ChargeRequest) (*pb.ChargeResponse, error) {
 	log.WithFields(logrus.Fields{
 		"transactionID": transactionID,
 		"card_type":     cardType,
-	}).Debug("Charge successful")
+	}).Info("[PaymentService] Charge successful")
 
 	return &pb.ChargeResponse{TransactionId: transactionID}, nil
 }

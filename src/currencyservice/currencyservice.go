@@ -30,7 +30,7 @@ func (c *currencyService) GetSupportedCurrencies(ctx context.Context, req *pb.Em
 
 // Convert rpc 将金额从一种货币转换为另一种货币。
 func (s *currencyService) Convert(ctx context.Context, req *pb.CurrencyConversionRequest) (*pb.Money, error) {
-	log.Info("[CurrencyService] Convert invoked", "from", req.GetFrom(), "to", req.GetToCode())
+	log.Debug("[CurrencyService] Convert invoked", "from", req.GetFrom(), "to", req.GetToCode())
 	from := req.GetFrom()
 	if from == nil {
 		return nil, status.Error(codes.InvalidArgument, "from money is required")
@@ -66,7 +66,7 @@ func (s *currencyService) Convert(ctx context.Context, req *pb.CurrencyConversio
 		Units:        int64(math.Floor(result.units)),
 		Nanos:        int32(math.Floor(result.nanos)),
 	}
-	log.Infof("[currencyservice]successfully converted %d.%09d %s to %d.%09d %s",
+	log.Debugf("[currencyservice]successfully converted %d.%09d %s to %d.%09d %s",
 		from.GetUnits(), from.GetNanos(), from.GetCurrencyCode(),
 		money.GetUnits(), money.GetNanos(), money.GetCurrencyCode())
 
