@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	pb "github.com/kznLeaf/curated-store/src/paymentservice/genproto"
@@ -74,23 +76,27 @@ func main() {
 		port = os.Getenv("PORT")
 	}
 	log.Infof("[paymentservice]starting grpc server at :%s", port)
-	go run(port)
-	select {}
-}
 
-func run(port string) string {
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%s", port))
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	var srv *grpc.Server
-	srv = grpc.NewServer(
-		grpc.StatsHandler(otelgrpc.NewServerHandler())) // StatsHandler 同时处理 Unary 和 Stream 请求的追踪。
-	svc := &paymentServer{}                   // 创建service具体实现的实例
-	pb.RegisterPaymentServiceServer(srv, svc) // 将该服务的实例注册到gRPC服务器
-	healthpb.RegisterHealthServer(srv, svc)   // 注册健康检查服务
+	srv = grpc.NewServer(grpc.StatsHandler(otelgrpc.NewServerHandler())) // StatsHandler 同时处理 Unary 和 Stream 请求的追踪。
+	svc := &paymentServer{}                                              // 创建service具体实现的实例
+	pb.RegisterPaymentServiceServer(srv, svc)                            // 将该服务的实例注册到gRPC服务器
+	healthpb.RegisterHealthServer(srv, svc)                              // 注册健康检查服务
 
-	go srv.Serve(listener)
-	return listener.Addr().String()
+	// 设置优雅关闭
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	go func() {
+		<-quit
+		srv.GracefulStop()
+	}()
+
+	if err := srv.Serve(listener); err != nil {
+		log.Fatal(err)
+	}
 }

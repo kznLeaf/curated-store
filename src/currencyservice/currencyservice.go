@@ -20,6 +20,7 @@ type currencyService struct {
 
 // GetSupportedCurrencies rpc 返回支持的货币代码列表。
 func (c *currencyService) GetSupportedCurrencies(ctx context.Context, req *pb.Empty) (*pb.GetSupportedCurrenciesResponse, error) {
+	log.Info("[CurrencyService] GetSupportedCurrencies invoked")
 	codes := make([]string, 0, len(c.rates))
 	for code := range c.rates {
 		codes = append(codes, code)
@@ -29,6 +30,7 @@ func (c *currencyService) GetSupportedCurrencies(ctx context.Context, req *pb.Em
 
 // Convert rpc 将金额从一种货币转换为另一种货币。
 func (s *currencyService) Convert(ctx context.Context, req *pb.CurrencyConversionRequest) (*pb.Money, error) {
+	log.Info("[CurrencyService] Convert invoked", "from", req.GetFrom(), "to", req.GetToCode())
 	from := req.GetFrom()
 	if from == nil {
 		return nil, status.Error(codes.InvalidArgument, "from money is required")
@@ -64,6 +66,9 @@ func (s *currencyService) Convert(ctx context.Context, req *pb.CurrencyConversio
 		Units:        int64(math.Floor(result.units)),
 		Nanos:        int32(math.Floor(result.nanos)),
 	}
+	log.Infof("[currencyservice]successfully converted %d.%09d %s to %d.%09d %s",
+		from.GetUnits(), from.GetNanos(), from.GetCurrencyCode(),
+		money.GetUnits(), money.GetNanos(), money.GetCurrencyCode())
 
 	return money, nil
 }
