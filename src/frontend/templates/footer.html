@@ -60,6 +60,14 @@
         const error = params.get('validation_error'); // 获取 validation_error 参数的值，如果没有则返回 null
 
         if (error) {
+
+            // 恢复滚动位置
+            const savedScroll = sessionStorage.getItem('scroll_before_validation');
+            if (savedScroll !== null) {
+                window.scrollTo(0, parseInt(savedScroll, 10));
+                sessionStorage.removeItem('scroll_before_validation');
+            }
+
             // 2. 创建并渲染弹窗
             const toast = document.createElement("div");
             toast.className = "top-toast";
@@ -81,6 +89,12 @@
             // 使用 replaceState 替换当前历史记录
             window.history.replaceState(null, '', newUrl);
         }
+
+        document.querySelectorAll('form').forEach(form => {
+            form.addEventListener('submit', () => {
+                sessionStorage.setItem('scroll_before_validation', window.scrollY);
+            });
+        });
     })();
 </script>
 
