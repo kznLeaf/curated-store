@@ -581,6 +581,22 @@ func (fe *frontendServer) placeOrderHandler(w http.ResponseWriter, r *http.Reque
 
 }
 
+func (fe *frontendServer) assistantHandler(w http.ResponseWriter, r *http.Request) {
+	currencies, err := fe.getCurrencies(r.Context())
+	if err != nil {
+		renderHTTPError(log, r, w, fmt.Errorf("could not retrieve currencies: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	if err := templates.ExecuteTemplate(w, "assistant", injectCommonTemplateData(r, map[string]interface{}{
+		"show_currency": false,
+		"currencies":    currencies,
+	})); err != nil {
+		log.Println(err)
+	}
+
+}
+
 // renderTopValidationPopup 在用户输入有误时，渲染一个包含错误信息的弹窗，并引导用户返回之前的页面继续操作
 func renderTopValidationPopup(r *http.Request, w http.ResponseWriter, err error, code int) {
 	log.WithField("validation_error", err).Warn("form validation failed")
