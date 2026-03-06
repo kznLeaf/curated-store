@@ -41,4 +41,4 @@ ENV GEVENT_SUPPORT=True
 ENV PATH="/app/.venv/bin:$PATH"
 
 # 启动命令
-ENTRYPOINT ["sh", "-c", "locust --host=http://${FRONTEND_ADDR} --headless -u ${USERS:-10} -r ${RATE:-1} 2>&1"]
+ENTRYPOINT ["sh", "-c", "locust --host=http://${FRONTEND_ADDR} --headless -u ${USERS:-100} -r ${RATE:-5} 2>&1"]

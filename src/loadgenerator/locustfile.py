@@ -45,7 +45,7 @@ def empty_cart(self):
     self.client.post('/cart/empty')
 
 def checkout(self):
-    self.addToCart()
+    addToCart(self)
     current_year = datetime.datetime.now().year+1
     self.client.post("/cart/checkout", {
         'email': fake.email(),
