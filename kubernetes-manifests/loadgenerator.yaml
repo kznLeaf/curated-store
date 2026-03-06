@@ -45,9 +45,10 @@ spec:
           MAX_RETRIES=12
           RETRY_INTERVAL=10
           for i in $(seq 1 $MAX_RETRIES); do
-            echo "Attempt $i: Pinging frontend: ${FRONTEND_ADDR}..."
-            STATUSCODE=$(wget --server-response http://${FRONTEND_ADDR} 2>&1 | awk '/^  HTTP/{print $2}')
-            if [ $STATUSCODE -eq 200 ]; then
+            frontend_addr="${FRONTEND_ADDR}"
+            echo "Attempt $i: Pinging frontend: ${frontend_addr}"
+            STATUSCODE=$(wget --spider -S http://${frontend_addr} 2>&1 | grep "HTTP/" | awk '{print $2}')
+            if [[ "$STATUSCODE" = "200" ]]; then
                 echo "Frontend is reachable."
                 exit 0
             fi
