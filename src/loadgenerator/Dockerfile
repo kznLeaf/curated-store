@@ -21,7 +21,7 @@ COPY . .
 # Sync the project
 RUN --mount=type=cache,target=/root/.cache/uv \
     UV_INDEX_URL=https://pypi.mirrors.ustc.edu.cn/simple/ \
-    uv sync --locked --no-dev
+    uv sync --frozen --no-dev
 
 # Stage 2: Create the final image
 FROM python:3.12.8-alpine AS runtime
