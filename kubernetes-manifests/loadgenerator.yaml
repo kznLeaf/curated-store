@@ -18,7 +18,7 @@ metadata:
   labels:
     app: loadgenerator
 spec:
-  selector:
+  selector: 
     matchLabels:
       app: loadgenerator
   replicas: 1
