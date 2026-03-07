@@ -48,21 +48,22 @@ metadata:
 requires:
 - configs:
   - app
-build:
-  artifacts:
-  - image: loadgenerator
-    context: src/loadgenerator
-  tagPolicy:
-    gitCommit: {}
-  local:
-    useDockerCLI: true     # 必须启用才能使用 BuildKit
-    useBuildkit: true      # 启用 BuildKit
-manifests:
-  rawYaml:
-  - ./kubernetes-manifests/loadgenerator.yaml
-deploy:
-  kubectl: {}
 profiles: # 该预设用于谷歌平台
 - name: gcb
   build:
     googleCloudBuild: {}
+- name: loadgen
+  build:
+    artifacts:
+    - image: loadgenerator
+      context: src/loadgenerator
+    tagPolicy:
+      gitCommit: {}
+    local:
+      useDockerCLI: true     # 必须启用才能使用 BuildKit
+      useBuildkit: true      # 启用 BuildKit
+  manifests:
+    rawYaml:
+    - ./kubernetes-manifests/loadgenerator.yaml
+  deploy:
+    kubectl: {}
