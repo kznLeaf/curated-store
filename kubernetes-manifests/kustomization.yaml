@@ -23,7 +23,6 @@ resources:
  - paymentservice.yaml
  - adservice.yaml
  - recommendationservice.yaml
- - components.yaml # 用来把 metrics-server 的组件部署到集群中
  - emailservice.yaml
  - cartservice.yaml
  - checkoutservice.yaml
@@ -39,15 +38,3 @@ resources:
 # - ../kustomize/components/container-images-tag
 # - ../kustomize/components/container-images-tag-suffix
 # - ../kustomize/components/container-images-registry
-
-patches:
-- patch: |-
-    - op: add
-      path: /spec/template/spec/containers/0/args/-
-      value: --kubelet-insecure-tls
-  target:
-    group: apps
-    kind: Deployment
-    name: metrics-server
-    namespace: kube-system
-    version: v1
