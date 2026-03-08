@@ -8,9 +8,9 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/kznLeaf/curated-store/infra/xgrpc"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 )
 
 // frontServer 用于管理前端与后段的交互
@@ -78,22 +78,33 @@ func main() {
 	addr := os.Getenv("LISTEN_ADDR")
 	log.Infof("frontend service listening on port %s, addr: %s\n", srvPort, addr)
 
+	type serviceBootstrap struct {
+		name   string
+		envKey string
+		addr   *string
+		conn   **grpc.ClientConn
+	}
+
+	services := []serviceBootstrap{
+		{name: "productcatalogservice", envKey: "PRODUCT_CATALOG_SERVICE_ADDR", addr: &svc.productCatalogSvcAddr, conn: &svc.productCatalogSvcConn},
+		{name: "currencyservice", envKey: "CURRENCY_SERVICE_ADDR", addr: &svc.currencySvcAddr, conn: &svc.currencySvcConn},
+		{name: "shippingservice", envKey: "SHIPPING_SERVICE_ADDR", addr: &svc.shippingSvcAddr, conn: &svc.shippingSvcConn},
+		{name: "adservice", envKey: "AD_SERVICE_ADDR", addr: &svc.adSvcAddr, conn: &svc.adSvcConn},
+		{name: "recommendationservice", envKey: "RECOMMENDATION_SERVICE_ADDR", addr: &svc.recommendationSvcAddr, conn: &svc.recommendationSvcConn},
+		{name: "cartservice", envKey: "CART_SERVICE_ADDR", addr: &svc.cartSvcAddr, conn: &svc.cartSvcConn},
+		{name: "checkoutservice", envKey: "CHECKOUT_SERVICE_ADDR", addr: &svc.checkoutSvcAddr, conn: &svc.checkoutSvcConn},
+	}
+
 	// 读取服务地址
-	mustMapEnv(&svc.productCatalogSvcAddr, "PRODUCT_CATALOG_SERVICE_ADDR")
-	mustMapEnv(&svc.currencySvcAddr, "CURRENCY_SERVICE_ADDR")
-	mustMapEnv(&svc.shippingSvcAddr, "SHIPPING_SERVICE_ADDR")
-	mustMapEnv(&svc.adSvcAddr, "AD_SERVICE_ADDR")
-	mustMapEnv(&svc.recommendationSvcAddr, "RECOMMENDATION_SERVICE_ADDR")
-	mustMapEnv(&svc.cartSvcAddr, "CART_SERVICE_ADDR")
-	mustMapEnv(&svc.checkoutSvcAddr, "CHECKOUT_SERVICE_ADDR")
-	// 利用上一步读取的服务地址，建立gRPC连接
-	mustConnGRPC(ctx, &svc.productCatalogSvcConn, svc.productCatalogSvcAddr)
-	mustConnGRPC(ctx, &svc.currencySvcConn, svc.currencySvcAddr)
-	mustConnGRPC(ctx, &svc.shippingSvcConn, svc.shippingSvcAddr)
-	mustConnGRPC(ctx, &svc.adSvcConn, svc.adSvcAddr)
-	mustConnGRPC(ctx, &svc.recommendationSvcConn, svc.recommendationSvcAddr)
-	mustConnGRPC(ctx, &svc.cartSvcConn, svc.cartSvcAddr)
-	mustConnGRPC(ctx, &svc.checkoutSvcConn, svc.checkoutSvcAddr)
+	for _, s := range services {
+		xgrpc.Must(xgrpc.MustMapEnv(s.addr, s.envKey), log, "failed to read env %s", s.envKey)
+	}
+
+	// 利用上一步读取的服务地址，建立 gRPC 连接
+	for _, s := range services {
+		xgrpc.Must(xgrpc.MustConnGRPC(ctx, s.conn, *s.addr), log, "failed to connect to %s (%s)", s.name, *s.addr)
+	}
+
 	// baseUrl := os.Getenv("BASE_URL") // 该环境变量位于 kustomize/components/custom-base-url/kustomization.yaml
 
 	// 设置路由规则和处理函数
@@ -116,28 +127,4 @@ func main() {
 
 	// 启动 HTTP 服务器。传入handler，这样每次收到HTTP请求自动调用中间件链和路由规则
 	log.Fatal(http.ListenAndServe(addr+":"+srvPort, handler))
-}
-
-// mustMapEnv 强制将环境变量映射到目标字符串指针
-// 这里的环境变量由k8s自动为Service创建，并且短横线被替换为下划线。
-// 例如，my-nginx服务会自动在 node 中设置环境变量 MY_NGINX_SERVICE_HOST 和 MY_NGINX_SERVICE_PORT。
-// 因此通过读取环境变量，就可以实现服务发现。这也是k8s的两种服务发现方式之一。
-func mustMapEnv(target *string, envKey string) {
-	v := os.Getenv(envKey)
-	if v == "" {
-		logrus.Fatalf("environment variable %q is not set", envKey)
-	}
-	*target = v
-}
-
-// mustConnGRPC 强制建立 gRPC 连接。
-// 该函数会尝试连接指定地址的 gRPC 服务，如果连接成功，则将连接对象保存到 conn 指向的变量中。如果连接失败，函数会记录错误并调用 logrus.Fatalf 来终止程序运行。
-func mustConnGRPC(ctx context.Context, conn **grpc.ClientConn, addr string) {
-	var err error
-
-	// NewClient 立即返回，不需要设置超时。连接的建立和维护由 gRPC 库负责，库会自动处理连接的重试和恢复。
-	*conn, err = grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		logrus.Fatalf("failed to connect to gRPC service %q: %v", addr, err)
-	}
 }
