@@ -37,15 +37,14 @@ class BaseEmailService:
             status=health_pb2.HealthCheckResponse.UNIMPLEMENTED
         )
 
-    def List(self, request, context):
-        return demo_pb2.ListRecommendationsResponse(
-            status=health_pb2.HealthCheckResponse.UNIMPLEMENTED
-        )
-
 
 class DummyEmailService(BaseEmailService):
     def SendOrderConfirmation(self, request, context):
-        logger.info('A request to send order confirmation email to {} has been received.'.format(request.email))
+        logger.info(
+            "A request to send order confirmation email to {} has been received.".format(
+                request.email
+            )
+        )
 
         return demo_pb2.Empty()
 
