@@ -16,21 +16,21 @@ func loadCatalog(catalog *pb.ListProductsResponse) error {
 
 // loadCatalogFromLocalFile 从本地文件 products.json 加载产品目录
 func loadCatalogFromLocalFile(catalog *pb.ListProductsResponse) error {
-	log.Info("正在加载本地文件 products.json")
+	log.Info("loading local file products.json")
 
 	data, err := os.ReadFile("products.json")
 	if err != nil {
-		log.Error("读取 products.json 文件失败:", err)
+		log.Error("failed to read products.json:", err)
 		return err
 	}
 
 	// 把结果读取到 catalog 结构体中
 	if err = protojson.Unmarshal(data, catalog); err != nil {
-		log.Error("解析 products.json 文件失败:", err)
+		log.Error("failed to parse products.json:", err)
 		return err
 	}
 
-	log.Info("成功解析文件products.json")
+	log.Info("successfully parsed products.json")
 
 	return nil
 }

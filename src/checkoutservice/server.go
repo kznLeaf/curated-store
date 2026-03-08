@@ -98,6 +98,6 @@ func mustConnGRPC(_ context.Context, conn **grpc.ClientConn, addr string) {
 	// NewClient 立即返回，不需要设置超时。连接的建立和维护由 gRPC 库负责，库会自动处理连接的重试和恢复。
 	*conn, err = grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		logrus.Fatalf("无法连接到 gRPC 服务 %q: %v", addr, err)
+		logrus.Fatalf("failed to connect to gRPC service %q: %v", addr, err)
 	}
 }

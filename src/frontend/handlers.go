@@ -50,14 +50,14 @@ func (fe *frontendServer) homeHandler(w http.ResponseWriter, r *http.Request) {
 
 	currencies, err := fe.getCurrencies(r.Context())
 	if err != nil {
-		log.Infof("无法获取货币列表 %v", err)
+		log.Infof("could not retrieve currencies: %v", err)
 		renderHTTPError(log, r, w, errors.New("could not retrieve currencies"), http.StatusInternalServerError)
 		return
 	}
 
 	products, err := fe.GetProducts(r.Context())
 	if err != nil {
-		log.Infof("无法获取产品列表 %v", err)
+		log.Infof("could not retrieve products: %v", err)
 		renderHTTPError(log, r, w, errors.New("could not retrieve products"), http.StatusInternalServerError)
 		return
 	}
@@ -70,8 +70,8 @@ func (fe *frontendServer) homeHandler(w http.ResponseWriter, r *http.Request) {
 	for i, p := range products {
 		price, err := fe.convertCurrency(r.Context(), p.GetPriceUsd(), currentCurrency(r))
 		if err != nil {
-			log.Infof("转换货币错误: %v", err)
-			renderHTTPError(log, r, w, errors.New("无法转换货币"), http.StatusInternalServerError)
+			log.Infof("could not convert currency: %v", err)
+			renderHTTPError(log, r, w, errors.New("could not convert currency"), http.StatusInternalServerError)
 			return
 		}
 		ps[i] = productView{p, price}
@@ -86,7 +86,7 @@ func (fe *frontendServer) homeHandler(w http.ResponseWriter, r *http.Request) {
 	// 设置平台信息
 	var env = os.Getenv("ENV_PLATFORM") // 如果没有该环境变量，说明是local环境。GCP会设置该环境变量.
 	if env == "" || !stringinSlice(validEnvs, env) {
-		log.Infof("当前环境不属于支持的云平台")
+		log.Infof("could not retrieve platform details: %v", err)
 		env = "local"
 	}
 
@@ -96,7 +96,7 @@ func (fe *frontendServer) homeHandler(w http.ResponseWriter, r *http.Request) {
 		env = "gcp"
 	}
 
-	log.Debugf("当前环境: %s", env)
+	log.Debugf("Current environment: %s", env)
 	plat = &platformDetails{}
 	plat.setPlatformDetails(strings.ToLower(env))
 
@@ -157,33 +157,33 @@ func (fe *frontendServer) productHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	// 添加调试日志
-	log.WithField("id", id).WithField("currency", currentCurrency(r)).Debug("[producthandler]调试信息:")
+	log.WithField("id", id).WithField("currency", currentCurrency(r)).Debug("[producthandler]debug info:")
 
 	product, err := fe.GetProduct(r.Context(), id)
 	if err != nil {
-		log.Infof("无法获取产品 %v", err)
+		log.Infof("could not retrieve product: %v", err)
 		renderHTTPError(log, r, w, errors.New("could not retrieve product"), http.StatusInternalServerError)
 		return
 	}
 
 	currencies, err := fe.getCurrencies(r.Context())
 	if err != nil {
-		log.Infof("无法获取货币列表 %v", err)
-		renderHTTPError(log, r, w, errors.New("无法获取货币列表"), http.StatusInternalServerError)
+		log.Infof("could not retrieve currencies: %v", err)
+		renderHTTPError(log, r, w, errors.New("could not retrieve currencies"), http.StatusInternalServerError)
 		return
 	}
 
 	// product.GetPriceUsd() 为空？
 	price, err := fe.convertCurrency(r.Context(), product.GetPriceUsd(), currentCurrency(r))
 	if err != nil {
-		log.Infof("转换货币错误: %v", err)
-		renderHTTPError(log, r, w, errors.New("无法转换货币"), http.StatusInternalServerError)
+		log.Infof("could not convert currency: %v", err)
+		renderHTTPError(log, r, w, errors.New("could not convert currency"), http.StatusInternalServerError)
 		return
 	}
 
 	recommendations, err := fe.getRecommendations(r.Context(), sessionID(r), nil) // TODO 第三个参数为nil,也就是随机从所有产品中抽取
 	if err != nil {
-		log.Infof("获取推荐产品失败: %v", err)
+		log.Infof("could not retrieve recommendations: %v", err)
 	}
 
 	wrappedProduct := struct {
@@ -218,11 +218,10 @@ func (fe *frontendServer) setCurrencyHandler(w http.ResponseWriter, r *http.Requ
 	payload := validator.SetCurrencyPayload{Currency: cur} // 构造一个 SetCurrencyPayload 对象，包含用户选择的货币代码
 	// 下面执行校验
 	if err := payload.Validate(); err != nil {
-		log.Infof("无效的货币代码 %q: %v", cur, err)
-		renderHTTPError(log, r, w, fmt.Errorf("无效的货币代码 %q", cur), http.StatusBadRequest)
+		log.Infof("Invalid currency code %q: %v", cur, err)
+		renderHTTPError(log, r, w, fmt.Errorf("invalid currency code %q", cur), http.StatusBadRequest)
 		return
 	}
-	log.WithField("当前货币", payload.Currency).WithField("原货币", currentCurrency(r)).Debug("正在切换货币种类")
 
 	// 已经确认货币有效，把用户选择的货币代码写入 Cookie，设置过期时间
 	http.SetCookie(w, &http.Cookie{
@@ -448,12 +447,12 @@ func currentCurrency(r *http.Request) string {
 func (fe *frontendServer) chooseAd(ctx context.Context, ctxKeys []string, log logrus.FieldLogger) *pb.Ad {
 	ads, err := fe.getAd(ctx, ctxKeys)
 	if err != nil {
-		log.Errorf("[chooseAd]无法获取广告: %v", err)
+		log.Errorf("[chooseAd]failed to fetch ads: %v", err)
 		return nil
 	}
 
 	res := ads[rand.Intn(len(ads))]
-	log.Debugf("[chooseAd]从 %d 个广告中选择了广告: %v", len(ads), res)
+	// log.Debugf("[chooseAd] %d : %v", len(ads), res)
 	return res
 }
 

@@ -76,7 +76,7 @@ func main() {
 		srvPort = os.Getenv("PORT")
 	}
 	addr := os.Getenv("LISTEN_ADDR")
-	log.Infof("前端服务正在监听端口 %s, addr: %s\n", srvPort, addr)
+	log.Infof("frontend service listening on port %s, addr: %s\n", srvPort, addr)
 
 	// 读取服务地址
 	mustMapEnv(&svc.productCatalogSvcAddr, "PRODUCT_CATALOG_SERVICE_ADDR")
@@ -109,9 +109,9 @@ func main() {
 	r.HandleFunc(baseUrl+"/cart/checkout", svc.placeOrderHandler).Methods(http.MethodPost) // 结账 post
 	r.HandleFunc(baseUrl+"/cart/empty", svc.emptyCartHandler).Methods(http.MethodPost)     // 清空购物车 post
 	r.HandleFunc(baseUrl+"/assistant", svc.assistantHandler).Methods(http.MethodGet)
-	var handler http.Handler = r                                                           // r 实现了 http.Handler 接口，属于业务Handler
-	handler = &logHandler{log: log, next: handler}                                         // Router实现了 http.Handler 接口
-	handler = ensureSessionID(handler)                                                     // 注入 sessionID 管理中间件
+	var handler http.Handler = r                   // r 实现了 http.Handler 接口，属于业务Handler
+	handler = &logHandler{log: log, next: handler} // Router实现了 http.Handler 接口
+	handler = ensureSessionID(handler)             // 注入 sessionID 管理中间件
 	log.Infof("starting server on %s:%s", addr, srvPort)
 
 	// 启动 HTTP 服务器。传入handler，这样每次收到HTTP请求自动调用中间件链和路由规则
@@ -125,7 +125,7 @@ func main() {
 func mustMapEnv(target *string, envKey string) {
 	v := os.Getenv(envKey)
 	if v == "" {
-		logrus.Fatalf("环境变量 %q 未设置", envKey)
+		logrus.Fatalf("environment variable %q is not set", envKey)
 	}
 	*target = v
 }
@@ -138,6 +138,6 @@ func mustConnGRPC(ctx context.Context, conn **grpc.ClientConn, addr string) {
 	// NewClient 立即返回，不需要设置超时。连接的建立和维护由 gRPC 库负责，库会自动处理连接的重试和恢复。
 	*conn, err = grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		logrus.Fatalf("无法连接到 gRPC 服务 %q: %v", addr, err)
+		logrus.Fatalf("failed to connect to gRPC service %q: %v", addr, err)
 	}
 }

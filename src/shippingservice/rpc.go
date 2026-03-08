@@ -61,11 +61,11 @@ func (s *server) Watch(req *healthpb.HealthCheckRequest, ws healthpb.Health_Watc
 //   - *pb.GetQuoteResponse: 响应结果
 //   - error: 错误信息
 func (s *server) GetQuote(ctx context.Context, in *pb.GetQuoteRequest) (*pb.GetQuoteResponse, error) {
-	log.Info("[GetQuote] 收到请求")
-	defer log.Info("[GetQuote] 请求处理完毕")
+	// log.Info("[GetQuote] 收到请求")
+	// defer log.Info("[GetQuote] 请求处理完毕")
 
 	for _, item := range in.Items {
-		log.Debugf("[GetQuote] 计算运费 商品ID: %s, 数量: %d", item.GetProductId(), item.GetQuantity())
+		log.Debugf("[GetQuote] Item ID: %s, Quantity: %d", item.GetProductId(), item.GetQuantity())
 	}
 
 	return &pb.GetQuoteResponse{ // TODO 目前运费服务返回的是固定的运费，后续再完善这些逻辑
@@ -80,11 +80,10 @@ func (s *server) GetQuote(ctx context.Context, in *pb.GetQuoteRequest) (*pb.GetQ
 // It supplies a tracking ID for notional lookup of shipment delivery status.
 // 模拟发货流程，先打印日志，然后拼接完整的地址，再把地址作为盐生成物流追踪ID，并封装到响应结果中返回。只被结账服务调用。
 func (s *server) ShipOrder(ctx context.Context, in *pb.ShipOrderRequest) (*pb.ShipOrderResponse, error) {
-	log.Info("[ShipOrder] 收到请求")
-	defer log.Info("[ShipOrder] 请求处理完毕")
 	// 创建一个追踪ID
 	baseAddress := fmt.Sprintf("%s, %s, %s", in.Address.StreetAddress, in.Address.City, in.Address.State)
 	trackId := createTrackingId(baseAddress)
+	log.Infof("[ShipOrder] Shipping to %s, generated tracking ID: %s", baseAddress, trackId)
 	return &pb.ShipOrderResponse{TrackingId: trackId}, nil
 }
 
