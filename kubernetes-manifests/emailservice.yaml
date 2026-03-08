@@ -53,10 +53,12 @@ spec:
           value: "1"
         readinessProbe:
           periodSeconds: 5
+          initialDelaySeconds: 5
           grpc:
             port: 8080
         livenessProbe:
           periodSeconds: 5
+          initialDelaySeconds: 5
           grpc:
             port: 8080
         resources:
