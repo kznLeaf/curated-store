@@ -64,6 +64,6 @@ profiles: # 该预设用于谷歌平台
       useBuildkit: true      # 启用 BuildKit
   manifests:
     rawYaml:
-    - ./kubernetes-manifests/loadgenerator.yaml
+    - ./kubernetes-manifests/base/loadgenerator.yaml
   deploy:
     kubectl: {}
