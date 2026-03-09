@@ -1,6 +1,6 @@
 module github.com/kznLeaf/curated-store/src/adservice
 
-go 1.24.0
+go 1.25.0
 
 require (
 	github.com/sirupsen/logrus v1.9.4

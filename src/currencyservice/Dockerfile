@@ -14,7 +14,7 @@
 # limitations under the License.
 
 # 构建阶段，使用负责构建的平台来编译加速构建速度
-FROM --platform=$BUILDPLATFORM golang:1.24.0-alpine AS builder
+FROM --platform=$BUILDPLATFORM golang:1.25.0-alpine AS builder
 ARG TARGETOS
 ARG TARGETARCH
 

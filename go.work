@@ -1,7 +1,8 @@
-go 1.24.0
+go 1.25.0
 
 use (
 	./infra/xgrpc
 	./src/checkoutservice
 	./src/frontend
+	./src/productcatalogservice
 )

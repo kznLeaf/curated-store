@@ -215,7 +215,7 @@ func (cs *checkoutService) prepOrderItems(ctx context.Context, items []*pb.CartI
 }
 
 // convertCurrency 调用货币服务进行货币转换
-func (cs *checkoutService) convertCurrency(ctx context.Context, from *pb.Money, toCurrency string) (*pb.Money, error) {
+func (cs *checkoutService) convertCurrency(_ context.Context, from *pb.Money, toCurrency string) (*pb.Money, error) {
 	result, err := pb.NewCurrencyServiceClient(cs.currencySvcConn).Convert(context.TODO(), &pb.CurrencyConversionRequest{
 		From:   from,
 		ToCode: toCurrency})
