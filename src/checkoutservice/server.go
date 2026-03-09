@@ -52,7 +52,12 @@ func main() {
 	xgrpc.MustMapEnv(&svc.currencySvcAddr, "CURRENCY_SERVICE_ADDR")
 	xgrpc.MustMapEnv(&svc.shippingSvcAddr, "SHIPPING_SERVICE_ADDR")
 	xgrpc.MustMapEnv(&svc.cartSvcAddr, "CART_SERVICE_ADDR")
+	xgrpc.MustMapEnv(&svc.emailSvcAddr, "EMAIL_SERVICE_ADDR")
+	xgrpc.MustMapEnv(&svc.paymentSvcAddr, "PAYMENT_SERVICE_ADDR")
+
 	// 利用上一步读取的服务地址，建立gRPC连接
+	xgrpc.MustConnGRPC(ctx, &svc.emailSvcConn, svc.emailSvcAddr)
+	xgrpc.MustConnGRPC(ctx, &svc.paymentSvcConn, svc.paymentSvcAddr)
 	xgrpc.MustConnGRPC(ctx, &svc.productCatalogSvcConn, svc.productCatalogSvcAddr)
 	xgrpc.MustConnGRPC(ctx, &svc.currencySvcConn, svc.currencySvcAddr)
 	xgrpc.MustConnGRPC(ctx, &svc.shippingSvcConn, svc.shippingSvcAddr)
