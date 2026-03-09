@@ -47,30 +47,16 @@ func main() {
 
 	// 创建服务实例并读取后端服务地址
 	svc := new(checkoutService)
-
-	type serviceBootstrap struct {
-		name   string
-		envKey string
-		addr   *string
-		conn   **grpc.ClientConn
-	}
-
-	services := []serviceBootstrap{
-		{name: "shippingservice", envKey: "SHIPPING_SERVICE_ADDR", addr: &svc.shippingSvcAddr, conn: &svc.shippingSvcConn},
-		{name: "productcatalogservice", envKey: "PRODUCT_CATALOG_SERVICE_ADDR", addr: &svc.productCatalogSvcAddr, conn: &svc.productCatalogSvcConn},
-		{name: "cartservice", envKey: "CART_SERVICE_ADDR", addr: &svc.cartSvcAddr, conn: &svc.cartSvcConn},
-		{name: "currencyservice", envKey: "CURRENCY_SERVICE_ADDR", addr: &svc.currencySvcAddr, conn: &svc.currencySvcConn},
-		{name: "emailservice", envKey: "EMAIL_SERVICE_ADDR", addr: &svc.emailSvcAddr, conn: &svc.emailSvcConn},
-		{name: "paymentservice", envKey: "PAYMENT_SERVICE_ADDR", addr: &svc.paymentSvcAddr, conn: &svc.paymentSvcConn},
-	}
-
-	for _, s := range services {
-		xgrpc.Must(xgrpc.MustMapEnv(s.addr, s.envKey), log, "failed to read env %s", s.envKey)
-	}
-
-	for _, s := range services {
-		xgrpc.Must(xgrpc.MustConnGRPC(ctx, s.conn, *s.addr), log, "failed to connect to %s (%s)", s.name, *s.addr)
-	}
+	// 读取服务地址
+	xgrpc.MustMapEnv(&svc.productCatalogSvcAddr, "PRODUCT_CATALOG_SERVICE_ADDR")
+	xgrpc.MustMapEnv(&svc.currencySvcAddr, "CURRENCY_SERVICE_ADDR")
+	xgrpc.MustMapEnv(&svc.shippingSvcAddr, "SHIPPING_SERVICE_ADDR")
+	xgrpc.MustMapEnv(&svc.cartSvcAddr, "CART_SERVICE_ADDR")
+	// 利用上一步读取的服务地址，建立gRPC连接
+	xgrpc.MustConnGRPC(ctx, &svc.productCatalogSvcConn, svc.productCatalogSvcAddr)
+	xgrpc.MustConnGRPC(ctx, &svc.currencySvcConn, svc.currencySvcAddr)
+	xgrpc.MustConnGRPC(ctx, &svc.shippingSvcConn, svc.shippingSvcAddr)
+	xgrpc.MustConnGRPC(ctx, &svc.cartSvcConn, svc.cartSvcAddr)
 
 	log.Infof("service config: %+v", svc)
 

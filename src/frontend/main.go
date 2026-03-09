@@ -13,7 +13,7 @@ import (
 	"google.golang.org/grpc"
 )
 
-// frontServer 用于管理前端与后段的交互
+// frontServer 用于管理前端与后端的交互
 //
 // - <ServiceName>SvcAddr：服务地址
 // - <ServiceName>SvcConn: gRPC连接
@@ -78,32 +78,21 @@ func main() {
 	addr := os.Getenv("LISTEN_ADDR")
 	log.Infof("frontend service listening on port %s, addr: %s\n", srvPort, addr)
 
-	type serviceBootstrap struct {
-		name   string
-		envKey string
-		addr   *string
-		conn   **grpc.ClientConn
-	}
-
-	services := []serviceBootstrap{
-		{name: "productcatalogservice", envKey: "PRODUCT_CATALOG_SERVICE_ADDR", addr: &svc.productCatalogSvcAddr, conn: &svc.productCatalogSvcConn},
-		{name: "currencyservice", envKey: "CURRENCY_SERVICE_ADDR", addr: &svc.currencySvcAddr, conn: &svc.currencySvcConn},
-		{name: "shippingservice", envKey: "SHIPPING_SERVICE_ADDR", addr: &svc.shippingSvcAddr, conn: &svc.shippingSvcConn},
-		{name: "adservice", envKey: "AD_SERVICE_ADDR", addr: &svc.adSvcAddr, conn: &svc.adSvcConn},
-		{name: "recommendationservice", envKey: "RECOMMENDATION_SERVICE_ADDR", addr: &svc.recommendationSvcAddr, conn: &svc.recommendationSvcConn},
-		{name: "cartservice", envKey: "CART_SERVICE_ADDR", addr: &svc.cartSvcAddr, conn: &svc.cartSvcConn},
-		{name: "checkoutservice", envKey: "CHECKOUT_SERVICE_ADDR", addr: &svc.checkoutSvcAddr, conn: &svc.checkoutSvcConn},
-	}
-
-	// 读取服务地址
-	for _, s := range services {
-		xgrpc.Must(xgrpc.MustMapEnv(s.addr, s.envKey), log, "failed to read env %s", s.envKey)
-	}
-
-	// 利用上一步读取的服务地址，建立 gRPC 连接
-	for _, s := range services {
-		xgrpc.Must(xgrpc.MustConnGRPC(ctx, s.conn, *s.addr), log, "failed to connect to %s (%s)", s.name, *s.addr)
-	}
+	xgrpc.MustMapEnv(&svc.productCatalogSvcAddr, "PRODUCT_CATALOG_SERVICE_ADDR")
+	xgrpc.MustMapEnv(&svc.currencySvcAddr, "CURRENCY_SERVICE_ADDR")
+	xgrpc.MustMapEnv(&svc.shippingSvcAddr, "SHIPPING_SERVICE_ADDR")
+	xgrpc.MustMapEnv(&svc.adSvcAddr, "AD_SERVICE_ADDR")
+	xgrpc.MustMapEnv(&svc.recommendationSvcAddr, "RECOMMENDATION_SERVICE_ADDR")
+	xgrpc.MustMapEnv(&svc.cartSvcAddr, "CART_SERVICE_ADDR")
+	xgrpc.MustMapEnv(&svc.checkoutSvcAddr, "CHECKOUT_SERVICE_ADDR")
+	// 利用上一步读取的服务地址，建立gRPC连接
+	xgrpc.MustConnGRPC(ctx, &svc.productCatalogSvcConn, svc.productCatalogSvcAddr)
+	xgrpc.MustConnGRPC(ctx, &svc.currencySvcConn, svc.currencySvcAddr)
+	xgrpc.MustConnGRPC(ctx, &svc.shippingSvcConn, svc.shippingSvcAddr)
+	xgrpc.MustConnGRPC(ctx, &svc.adSvcConn, svc.adSvcAddr)
+	xgrpc.MustConnGRPC(ctx, &svc.recommendationSvcConn, svc.recommendationSvcAddr)
+	xgrpc.MustConnGRPC(ctx, &svc.cartSvcConn, svc.cartSvcAddr)
+	xgrpc.MustConnGRPC(ctx, &svc.checkoutSvcConn, svc.checkoutSvcAddr)
 
 	// baseUrl := os.Getenv("BASE_URL") // 该环境变量位于 kustomize/components/custom-base-url/kustomization.yaml
 
