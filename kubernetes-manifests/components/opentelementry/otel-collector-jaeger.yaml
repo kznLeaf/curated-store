@@ -1,0 +1,149 @@
+# Copyright The OpenTelemetry Authors
+# SPDX-License-Identifier: Apache-2.0
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: opentelemetrycollector
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: opentelemetrycollector
+  template:
+    metadata:
+      labels:
+        app: opentelemetrycollector
+    spec:
+      securityContext:
+        fsGroup: 1000
+        runAsGroup: 1000
+        runAsNonRoot: true
+        runAsUser: 1000
+      containers:
+      - name: otel-gateway
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+          privileged: false
+          readOnlyRootFilesystem: true
+        args:
+        - --config=/conf/collector-gateway-config.yaml
+        image: otel/opentelemetry-collector-contrib:0.147.0
+        imagePullPolicy: IfNotPresent
+        volumeMounts:
+        - name: collector-gateway-config
+          mountPath: /conf
+      volumes:
+      - name: collector-gateway-config
+        configMap:
+          items:
+          - key: collector-gateway-config.yaml
+            path: collector-gateway-config.yaml
+          name: collector-gateway-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: opentelemetrycollector
+spec:
+  ports:
+  - name: grpc-otlp
+    port: 4317
+    protocol: TCP
+    targetPort: 4317
+  # - name: prometheus
+  #   port: 9090
+  #   protocol: TCP
+  #   targetPort: 9090
+  selector:
+    app: opentelemetrycollector
+  type: ClusterIP
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: collector-gateway-config
+data:
+  collector-gateway-config.yaml: |
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: 0.0.0.0:4317
+    processors:
+    extensions:
+      health_check: {}
+    exporters:
+      otlp:
+        endpoint: jaeger:4317
+        tls:
+          insecure: true
+      debug:
+
+    service:
+      extensions: [health_check]
+      pipelines:
+        traces:
+          receivers: [otlp]
+          processors: []
+          exporters: [otlp, debug]
+
+# Jaeger:
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jaeger
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jaeger
+  template:
+    metadata:
+      labels:
+        app: jaeger
+    spec:
+      securityContext:
+        fsGroup: 1000
+        runAsGroup: 1000
+        runAsNonRoot: true
+        runAsUser: 1000
+      containers:
+      - name: jaeger
+        image: jaegertracing/all-in-one:1.60
+        imagePullPolicy: IfNotPresent
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          privileged: false
+          readOnlyRootFilesystem: true
+        ports:
+        - name: otlp-grpc
+          containerPort: 4317
+        - name: ui
+          containerPort: 16686
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jaeger
+spec:
+  selector:
+    app: jaeger
+  ports:
+  - name: otlp-grpc
+    port: 4317
+    protocol: TCP
+    targetPort: 4317
+  - name: ui
+    port: 16686
+    protocol: TCP
+    targetPort: 16686
+  type: ClusterIP
