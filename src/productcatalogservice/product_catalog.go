@@ -2,14 +2,17 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"strings"
-	"time"
 
 	pb "github.com/kznLeaf/curated-store/src/productcatalogservice/genproto"
+	"go.opentelemetry.io/otel/attribute"
+	otelcodes "go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/grpc/codes"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
-	"google.golang.org/grpc/status"
 
+	"google.golang.org/grpc/status"
 )
 
 type productCatalog struct {
@@ -54,28 +57,44 @@ func (p *productCatalog) parseCatalog() []*pb.Product {
 }
 
 // rpc ListProducts(Empty) returns (ListProductsResponse) {}
-func (p *productCatalog) ListProducts(context.Context, *pb.Empty) (*pb.ListProductsResponse, error) {
-	time.Sleep(extraLatency)
-	return &pb.ListProductsResponse{Products: p.parseCatalog()}, nil
+func (p *productCatalog) ListProducts(ctx context.Context, _ *pb.Empty) (*pb.ListProductsResponse, error) {
+	span := trace.SpanFromContext(ctx)
+	products := p.parseCatalog()
+	span.SetAttributes(
+		attribute.Int("app.products.count", len(products)),
+	)
+	return &pb.ListProductsResponse{Products: products}, nil
 }
 
 // rpc GetProduct(GetProductRequest) returns (Product) {} 查询单个产品的信息
 func (p *productCatalog) GetProduct(ctx context.Context, req *pb.GetProductRequest) (*pb.Product, error) {
-	time.Sleep(extraLatency)
+	span := trace.SpanFromContext(ctx)
+	span.SetAttributes(
+		attribute.String("app.product.id", req.Id),
+	)
 	if p.maps == nil {
 		p.parseCatalog()
 	}
 	if product, ok := p.maps[req.Id]; ok {
+		span.AddEvent("Product Found")
+		span.SetAttributes(
+			attribute.String("app.product.id", req.Id),
+			attribute.String("app.product.name", product.Name),
+		)
 		return product, nil
 	}
-	return &pb.Product{}, nil
+	span.AddEvent("Product Not Found")
+	msg := fmt.Sprintf("Product Not Found: %s", req.Id)
+	span.SetStatus(otelcodes.Error, msg)
+	span.AddEvent(msg)
+	return nil, status.Error(codes.NotFound, msg)
 }
 
 // 前端传来搜索的商品名称，调用这个函数进行匹配
 // TODO 也许可以用 ES 优化。目前采用的是遍历所有商品的名称和描述的方式
 // SearchProducts 搜索产品，由前端服务调用
 func (p *productCatalog) SearchProducts(ctx context.Context, req *pb.SearchProductsRequest) (*pb.SearchProductsResponse, error) {
-	time.Sleep(extraLatency)
+	span := trace.SpanFromContext(ctx)
 
 	var ps []*pb.Product
 	for _, product := range p.maps {
@@ -84,6 +103,10 @@ func (p *productCatalog) SearchProducts(ctx context.Context, req *pb.SearchProdu
 			ps = append(ps, product)
 		}
 	}
+
+	span.SetAttributes(
+		attribute.Int("app.products_search.count", len(ps)),
+	)
 
 	return &pb.SearchProductsResponse{Results: ps}, nil
 }
