@@ -7,6 +7,7 @@ import (
 	"os"
 	"time"
 
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
 	"go.opentelemetry.io/otel/propagation"
@@ -137,6 +138,8 @@ func main() {
 	handler = &logHandler{log: log, next: handler} // Router实现了 http.Handler 接口
 	handler = ensureSessionID(handler)             // 注入 sessionID 管理中间件
 	log.Infof("starting server on %s:%s", addr, srvPort)
+
+	handler = otelhttp.NewHandler(handler, "frontend") // 使用 OpenTelemetry HTTP 中间件，实现服务端自动埋点创建入站span
 
 	// 启动 HTTP 服务器。传入handler，这样每次收到HTTP请求自动调用中间件链和路由规则
 	log.Fatal(http.ListenAndServe(addr+":"+srvPort, handler))

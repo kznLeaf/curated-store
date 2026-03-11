@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/sirupsen/logrus"
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
@@ -27,7 +28,9 @@ func MustConnGRPC(ctx context.Context, conn **grpc.ClientConn, addr string) {
 	var err error
 
 	// NewClient 立即返回，不需要设置超时。连接的建立和维护由 gRPC 库负责，库会自动处理连接的重试和恢复。
-	*conn, err = grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	*conn, err = grpc.NewClient(addr,
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithStatsHandler(otelgrpc.NewClientHandler())) // gRPC client埋点，让该服务对下游的调用产生出站client span，保证上下文能传播到下游
 	if err != nil {
 		logrus.Fatalf("failed to connect to gRPC service %q: %v", addr, err)
 	}
