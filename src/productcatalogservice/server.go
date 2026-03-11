@@ -2,16 +2,18 @@ package main
 
 import (
 	"context"
-	"flag"
 	"fmt"
 	"net"
 	"os"
+	"os/signal"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/kznLeaf/curated-store/infra/xgrpc"
 	pb "github.com/kznLeaf/curated-store/src/productcatalogservice/genproto"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/propagation"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 
@@ -45,27 +47,45 @@ func init() {
 }
 
 func main() {
-	// if os.Getenv("ENABLE_TRACING") == "1" { 始终启用追踪功能，便于调试和性能分析
-	tp := initTracing()
+	ctx := context.Background()
+
+	var (
+		collectorAddr string
+		collectorConn *grpc.ClientConn
+	)
+
+	xgrpc.MustMapEnv(&collectorAddr, "COLLECTOR_SERVICE_ADDR")
+	xgrpc.MustConnGRPC(ctx, &collectorConn, collectorAddr)
+
+	exporter, err := otlptracegrpc.New(
+		ctx,
+		otlptracegrpc.WithGRPCConn(collectorConn),
+	)
+	if err != nil {
+		log.Fatalf("Failed to create trace exporter: %v", err)
+	}
+
+	otel.SetTextMapPropagator(
+		propagation.NewCompositeTextMapPropagator(
+			propagation.TraceContext{}, propagation.Baggage{}))
+
+	tp := sdktrace.NewTracerProvider(
+		sdktrace.WithBatcher(exporter),
+		sdktrace.WithSampler(sdktrace.AlwaysSample()))
+
+	otel.SetTracerProvider(tp)
+
 	defer func() {
-		if err := tp.Shutdown(context.Background()); err != nil {
+		if err := tp.Shutdown(ctx); err != nil {
 			log.Fatalf("Tracer Provider Shutdown: %v", err)
 		}
 	}()
-
-	flag.Parse()
 
 	if os.Getenv("PORT") != "" {
 		port = os.Getenv("PORT")
 	}
 	log.Infof("[productcatalog]starting grpc server at :%s", port)
-	run(port)
-	select {}
-}
 
-// run 启动 gRPC 服务器
-// 并注册服务实现和健康检查服务(待定)
-func run(port string) string {
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%s", port))
 	if err != nil {
 		log.Fatal(err)
@@ -84,30 +104,17 @@ func run(port string) string {
 	pb.RegisterProductCatalogServiceServer(srv, svc) // 将该服务的实例注册到gRPC服务器
 	healthpb.RegisterHealthServer(srv, svc)          // 注册健康检查服务
 
-	go srv.Serve(listener)
-	return listener.Addr().String()
-}
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM, syscall.SIGKILL)
+	defer cancel()
 
-func initTracing() *sdktrace.TracerProvider {
-	var (
-		collectorAddr string
-		collectorConn *grpc.ClientConn
-	)
+	go func() {
+		if err := srv.Serve(listener); err != nil {
+			log.Error(fmt.Sprintf("Failed to serve gRPC server, err: %v", err))
+		}
+	}()
 
-	ctx := context.Background()
+	<-ctx.Done()
 
-	xgrpc.MustMapEnv(&collectorAddr, "COLLECTOR_SERVICE_ADDR")
-	xgrpc.MustConnGRPC(ctx, &collectorConn, collectorAddr)
-
-	exporter, err := otlptracegrpc.New(
-		ctx,
-		otlptracegrpc.WithGRPCConn(collectorConn))
-	if err != nil {
-		log.Warnf("warn: Failed to create trace exporter: %v", err)
-	}
-	tp := sdktrace.NewTracerProvider(
-		sdktrace.WithBatcher(exporter),
-		sdktrace.WithSampler(sdktrace.AlwaysSample()))
-	otel.SetTracerProvider(tp)
-	return tp
+	srv.GracefulStop()
+	log.Info("Product Catalog gRPC server stopped")
 }
