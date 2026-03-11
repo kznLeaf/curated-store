@@ -7,6 +7,11 @@ import (
 	"os"
 	"time"
 
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
+	"go.opentelemetry.io/otel/propagation"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+
 	"github.com/gorilla/mux"
 	"github.com/kznLeaf/curated-store/infra/xgrpc"
 	"github.com/sirupsen/logrus"
@@ -38,6 +43,9 @@ type frontendServer struct {
 
 	checkoutSvcAddr string
 	checkoutSvcConn *grpc.ClientConn
+
+	collectorAddr string
+	collectorConn *grpc.ClientConn
 }
 
 const (
@@ -69,6 +77,22 @@ func main() {
 	ctx := context.Background()
 
 	svc := new(frontendServer)
+
+	// https://opentelemetry.io/docs/specs/otel/context/api-propagators/
+	otel.SetTextMapPropagator(
+		propagation.NewCompositeTextMapPropagator(
+			propagation.TraceContext{}, propagation.Baggage{}))
+
+	tp, err := initTracing(log, ctx, svc)
+	if err != nil {
+		log.Warnf("warn: Failed to initialize tracing: %v", err)
+	} else {
+		defer func() {
+			if err := tp.Shutdown(ctx); err != nil {
+				log.Fatalf("Tracer Provider Shutdown: %v", err)
+			}
+		}()
+	}
 
 	srvPort := port
 	// PORT 环境变量定义在k8s清单文件中。
@@ -116,4 +140,21 @@ func main() {
 
 	// 启动 HTTP 服务器。传入handler，这样每次收到HTTP请求自动调用中间件链和路由规则
 	log.Fatal(http.ListenAndServe(addr+":"+srvPort, handler))
+}
+
+func initTracing(log logrus.FieldLogger, ctx context.Context, svc *frontendServer) (*sdktrace.TracerProvider, error) {
+	xgrpc.MustMapEnv(&svc.collectorAddr, "COLLECTOR_SERVICE_ADDR")
+	xgrpc.MustConnGRPC(ctx, &svc.collectorConn, svc.collectorAddr)
+	exporter, err := otlptracegrpc.New(
+		ctx,
+		otlptracegrpc.WithGRPCConn(svc.collectorConn))
+	if err != nil {
+		log.Warnf("warn: Failed to create trace exporter: %v", err)
+	}
+	tp := sdktrace.NewTracerProvider(
+		sdktrace.WithBatcher(exporter),
+		sdktrace.WithSampler(sdktrace.AlwaysSample()))
+	otel.SetTracerProvider(tp)
+
+	return tp, err
 }

@@ -9,7 +9,7 @@ The only difference between the two methods lies in the **exporter** configurati
 
 ## Integration with Jaeger
 
-Refer to the configuration file [otel-collector-jaeger.yaml](https://www.google.com/search?q=./otel-collector-jaeger.yaml). Jaeger is deployed as a pod within the cluster and exposes its Web UI on port **16686**. To access this page in a local browser, set up port forwarding first:
+Refer to the configuration file [otel-collector-jaeger.yaml](./otel-collector-jaeger.yaml). Jaeger is deployed as a pod within the cluster and exposes its Web UI on port **16686**. To access this page in a local browser, set up port forwarding first:
 
 ```bash
 kubectl port-forward deployment/opentelemetrycollector 16686:16686
