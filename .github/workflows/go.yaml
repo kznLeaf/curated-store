@@ -3,6 +3,9 @@
 
 name: "Continuous Integration - Main"
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
 on:
   push:
     branches: [ "main" ]
@@ -22,6 +25,9 @@ jobs:
       uses: actions/setup-go@v4
       with:
         go-version: '1.25.0'
+        cache-dependency-path: |
+          src/productcatalogservice/go.sum
+          src/frontend/go.sum
     - name: GO Unit Tests
       timeout-minutes: 10
       run: |

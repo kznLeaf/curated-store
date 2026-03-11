@@ -22,8 +22,8 @@ package main
 import (
 	"context"
 	"net/http"
-	"time"
 	"os"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
@@ -64,35 +64,35 @@ func (lh *logHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	requestID, _ := uuid.NewRandom()
 	// 将请求 ID 注入到上下文中，供后续链路追踪使用。注意这里是 ctxKeyRequestID，用于日志记录，而不是 ctxKeySessionID 用于会话管理。
-	ctx = context.WithValue(ctx, ctxKeyRequestID{}, requestID.String()) 
+	ctx = context.WithValue(ctx, ctxKeyRequestID{}, requestID.String())
 
 	// 2. 记录请求开始时间，用于计算处理耗时
 	start := time.Now()
 	// 使用 responseRecorder 包装原始的 ResponseWriter，以便记录响应状态码和字节数
 	rr := &responseRecorder{w: w}
-	
+
 	// 3. 每次打日志时自动带上下面三个字段
 	log := lh.log.WithFields(logrus.Fields{
-		"http.req.path":   r.URL.Path,        // 请求路径，如 /product/123
-		"http.req.method": r.Method,          // 请求方法，如 GET、POST
+		"http.req.path":   r.URL.Path,         // 请求路径，如 /product/123
+		"http.req.method": r.Method,           // 请求方法，如 GET、POST
 		"http.req.id":     requestID.String(), // 请求唯一标识符
 	})
-	
+
 	// 4. 如果上下文中存在会话 ID（由 ensureSessionID 中间件设置），添加到日志中
 	if v, ok := r.Context().Value(ctxKeySessionID{}).(string); ok {
 		log = log.WithField("session", v)
 	}
-	
+
 	// 5. 记录请求开始日志
 	log.Debug("request started")
-	
+
 	// 6. 使用 defer 确保在函数返回时记录请求完成日志
 	// 这样即使发生 panic 也能记录日志（配合 recover 使用）
 	defer func() {
 		log.WithFields(logrus.Fields{
 			"http.resp.took_ms": int64(time.Since(start) / time.Millisecond), // 请求处理耗时（毫秒）
-			"http.resp.status":  rr.status,  // HTTP 状态码，如 200、404、500
-			"http.resp.bytes":   rr.b,       // 响应体大小（字节）
+			"http.resp.status":  rr.status,                                   // HTTP 状态码，如 200、404、500
+			"http.resp.bytes":   rr.b,                                        // 响应体大小（字节）
 		}).Debugf("request complete")
 	}()
 
@@ -100,7 +100,7 @@ func (lh *logHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// 后续的 handler 可以通过 r.Context().Value(ctxKeyLog{}) 获取这个 logger
 	ctx = context.WithValue(ctx, ctxKeyLog{}, log)
 	r = r.WithContext(ctx)
-	
+
 	// 8. 调用下一个 handler（中间件链模式）
 	// 使用 responseRecorder 而不是原始的 ResponseWriter，以便记录响应信息
 	lh.next.ServeHTTP(rr, r) // 调用 mux，开始执行业务逻辑
@@ -108,15 +108,15 @@ func (lh *logHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 // ensureSessionID 确保会话ID存在，并将会话 ID 保存到 context 中。
 // 有下面几种情况：
-// 
+//
 // 1. 没有 cookie，但是环境变量指定了共享会话：使用同一个硬编码的会话ID
 // 2. 没有 cookie，且环境变量指定了不共享会话：生成一个随机的 sessionID，不共享同一个会话
 // 3. 没有 cookie，且发生的是其他类型的 err ：直接中断请求，不再往后执行
 // 4. 有 cookie，且 cookie 无效：生成一个随机的 sessionID，不共享同一个会话
 func ensureSessionID(next http.Handler) http.HandlerFunc {
-    // Notice that "type HandlerFunc func(ResponseWriter, *Request)"
+	// Notice that "type HandlerFunc func(ResponseWriter, *Request)"
 	// 也就是说实现了 "type Handler interface { ServeHTTP(ResponseWriter, *Request) }" 接口的函数会自动变成 HandlerFunc 类型
-    // 所以只要返回一个 func(w http.ResponseWriter, r *http.Request) 签名的函数即可。
+	// 所以只要返回一个 func(w http.ResponseWriter, r *http.Request) 签名的函数即可。
 	return func(w http.ResponseWriter, r *http.Request) {
 		var sessionID string
 		c, err := r.Cookie(cookieSessionID)
@@ -133,7 +133,7 @@ func ensureSessionID(next http.Handler) http.HandlerFunc {
 			http.SetCookie(w, &http.Cookie{
 				Name:   cookieSessionID,
 				Value:  sessionID,
-				MaxAge: cookieMaxAge, 
+				MaxAge: cookieMaxAge,
 			})
 		} else if err != nil { // 发生其他错误，直接中断请求，不继续执行后续中间件
 			return
