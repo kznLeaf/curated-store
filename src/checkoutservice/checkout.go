@@ -7,6 +7,8 @@ import (
 	"github.com/google/uuid"
 	pb "github.com/kznLeaf/curated-store/src/checkoutservice/genproto"
 	"github.com/kznLeaf/curated-store/src/checkoutservice/money"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
@@ -34,6 +36,9 @@ type checkoutService struct {
 
 	paymentSvcAddr string
 	paymentSvcConn *grpc.ClientConn
+
+	collectorAddr string
+	collectorConn *grpc.ClientConn
 }
 
 // Check 实现健康检查接口，返回服务状态
@@ -70,6 +75,8 @@ func (cs *checkoutService) List(ctx context.Context, req *healthpb.HealthListReq
 // 仅在前端服务 PlaceOrderHandler 中被调用，因为用户只能通过 Web 前端下单
 func (cs *checkoutService) PlaceOrder(ctx context.Context, req *pb.PlaceOrderRequest) (*pb.PlaceOrderResponse, error) {
 	log.Infof("[PlaceOrder] user_id=%q user_currency=%q", req.UserId, req.UserCurrency)
+
+	span := trace.SpanFromContext(ctx)
 
 	// 1. 生成订单 ID（UUID）
 	orderID, err := uuid.NewUUID()
@@ -119,6 +126,16 @@ func (cs *checkoutService) PlaceOrder(ctx context.Context, req *pb.PlaceOrderReq
 		ShippingAddress:    req.Address,
 		Items:              prep.orderItems,
 	}
+
+	span.SetAttributes(
+		attribute.String("userID", req.UserId),
+		attribute.String("orderID", orderID.String()),
+		attribute.String("transactionID", txID),
+		attribute.String("shippingTrackingID", shippingTrackingID),
+		attribute.Int("orderItemsCount", len(prep.orderItems)),
+		attribute.Float64("totalMoney", float64(total.GetUnits())+float64(total.GetNanos())/1e9),
+		attribute.String("userCurrency", req.UserCurrency),
+	)
 
 	// 7. 发送订单确认邮件
 	if err := cs.sendOrderConfirmation(ctx, req.Email, orderResult); err != nil {

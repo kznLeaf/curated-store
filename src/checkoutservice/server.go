@@ -9,7 +9,12 @@ import (
 
 	"github.com/kznLeaf/curated-store/infra/xgrpc"
 	pb "github.com/kznLeaf/curated-store/src/checkoutservice/genproto"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
+	"go.opentelemetry.io/otel/propagation"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 
 	// "go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
@@ -54,6 +59,7 @@ func main() {
 	xgrpc.MustMapEnv(&svc.cartSvcAddr, "CART_SERVICE_ADDR")
 	xgrpc.MustMapEnv(&svc.emailSvcAddr, "EMAIL_SERVICE_ADDR")
 	xgrpc.MustMapEnv(&svc.paymentSvcAddr, "PAYMENT_SERVICE_ADDR")
+	xgrpc.MustMapEnv(&svc.collectorAddr, "COLLECTOR_SERVICE_ADDR")
 
 	// 利用上一步读取的服务地址，建立gRPC连接
 	xgrpc.MustConnGRPC(ctx, &svc.emailSvcConn, svc.emailSvcAddr)
@@ -62,6 +68,31 @@ func main() {
 	xgrpc.MustConnGRPC(ctx, &svc.currencySvcConn, svc.currencySvcAddr)
 	xgrpc.MustConnGRPC(ctx, &svc.shippingSvcConn, svc.shippingSvcAddr)
 	xgrpc.MustConnGRPC(ctx, &svc.cartSvcConn, svc.cartSvcAddr)
+	xgrpc.MustConnGRPC(ctx, &svc.collectorConn, svc.collectorAddr)
+
+	// Init tracing
+	exporter, err := otlptracegrpc.New(
+		ctx,
+		otlptracegrpc.WithGRPCConn(svc.collectorConn),
+	)
+	if err != nil {
+		log.Fatalf("Failed to create trace exporter: %v", err)
+	}
+
+	otel.SetTextMapPropagator(
+		propagation.NewCompositeTextMapPropagator(
+			propagation.TraceContext{}, propagation.Baggage{}))
+
+	tp := sdktrace.NewTracerProvider(
+		sdktrace.WithBatcher(exporter),
+		sdktrace.WithSampler(sdktrace.AlwaysSample()))
+
+	otel.SetTracerProvider(tp)
+	defer func() {
+		if err := tp.Shutdown(ctx); err != nil {
+			log.Fatalf("Tracer Provider Shutdown: %v", err)
+		}
+	}()
 
 	log.Infof("service config: %+v", svc)
 
@@ -77,7 +108,14 @@ func main() {
 	pb.RegisterCheckoutServiceServer(server, svc)
 	healthpb.RegisterHealthServer(server, svc)
 	log.Infof("starting to listen on tcp: %q", lis.Addr().String())
-	err = server.Serve(lis)
-	log.Fatal(err)
 
+	go func() {
+		if err := server.Serve(lis); err != nil {
+			log.Error(fmt.Sprintf("Failed to serve gRPC server, err: %v", err))
+		}
+	}()
+
+	<-ctx.Done() // 等待中断信号
+	server.GracefulStop()
+	log.Info("Checkoutservice gRPC server stopped")
 }

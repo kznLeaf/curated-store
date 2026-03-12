@@ -15,6 +15,7 @@ on:
       - "src/loadgenerator/**"
       - "src/recommendationservice/**"
       - "src/emailservice/**"
+      - "src/productcatalogservice/**"
 
 jobs:
   code-tests:
