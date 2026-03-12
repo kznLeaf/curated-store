@@ -104,7 +104,7 @@ func main() {
 	pb.RegisterProductCatalogServiceServer(srv, svc) // 将该服务的实例注册到gRPC服务器
 	healthpb.RegisterHealthServer(srv, svc)          // 注册健康检查服务
 
-	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM, syscall.SIGKILL)
+	stop, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM, syscall.SIGKILL)
 	defer cancel()
 
 	go func() {
@@ -113,7 +113,7 @@ func main() {
 		}
 	}()
 
-	<-ctx.Done()
+	<-stop.Done()
 
 	srv.GracefulStop()
 	log.Info("Product Catalog gRPC server stopped")

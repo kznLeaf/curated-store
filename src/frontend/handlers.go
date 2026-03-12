@@ -19,6 +19,8 @@ import (
 	money "github.com/kznLeaf/curated-store/src/frontend/money"
 	validator "github.com/kznLeaf/curated-store/src/frontend/validator"
 	"github.com/sirupsen/logrus"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
 )
 
 var (
@@ -46,18 +48,29 @@ type ctxKeyRequestID struct{}
 func (fe *frontendServer) homeHandler(w http.ResponseWriter, r *http.Request) {
 	log := r.Context().Value(ctxKeyLog{}).(logrus.FieldLogger)
 
+	ctx, span := tracer.Start(r.Context(), "homeHandler")
+	defer span.End()
+
 	log.WithField("[homehandler]currency", currentCurrency(r)).Info("home")
 
-	currencies, err := fe.getCurrencies(r.Context())
+	getCurrencysCtx, getCurrenciesSpan := tracer.Start(ctx, "GetCurrencies")
+	currencies, err := fe.getCurrencies(getCurrencysCtx)
+	getCurrenciesSpan.End()
 	if err != nil {
 		log.Infof("could not retrieve currencies: %v", err)
+		span.RecordError(err)
+		span.SetStatus(codes.Error, "failed to complete the order")
 		renderHTTPError(log, r, w, errors.New("could not retrieve currencies"), http.StatusInternalServerError)
 		return
 	}
 
-	products, err := fe.GetProducts(r.Context())
+	getProductsCtx, getProductsSpan := tracer.Start(ctx, "GetProducts")
+	products, err := fe.GetProducts(getProductsCtx)
+	getProductsSpan.End()
 	if err != nil {
 		log.Infof("could not retrieve products: %v", err)
+		span.RecordError(err)
+		span.SetStatus(codes.Error, "failed to complete the order")
 		renderHTTPError(log, r, w, errors.New("could not retrieve products"), http.StatusInternalServerError)
 		return
 	}
@@ -68,17 +81,25 @@ func (fe *frontendServer) homeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	ps := make([]productView, len(products))
 	for i, p := range products {
-		price, err := fe.convertCurrency(r.Context(), p.GetPriceUsd(), currentCurrency(r))
+		convertCtx, convertSpan := tracer.Start(ctx, "ConvertCurrency")
+		price, err := fe.convertCurrency(convertCtx, p.GetPriceUsd(), currentCurrency(r))
+		convertSpan.End()
 		if err != nil {
 			log.Infof("could not convert currency: %v", err)
+			span.RecordError(err)
+			span.SetStatus(codes.Error, "failed to complete the order")
 			renderHTTPError(log, r, w, errors.New("could not convert currency"), http.StatusInternalServerError)
 			return
 		}
 		ps[i] = productView{p, price}
 	}
 
-	cart, err := fe.getCart(r.Context(), sessionID(r))
+	getCartCtx, getCartSpan := tracer.Start(ctx, "GetCart")
+	cart, err := fe.getCart(getCartCtx, sessionID(r))
+	getCartSpan.End()
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, "failed to complete the order")
 		renderHTTPError(log, r, w, errors.New("could not retrieve cart"), http.StatusInternalServerError)
 		return
 	}
@@ -151,6 +172,9 @@ func (plat *platformDetails) setPlatformDetails(env string) {
 func (fe *frontendServer) productHandler(w http.ResponseWriter, r *http.Request) {
 	log := r.Context().Value(ctxKeyLog{}).(logrus.FieldLogger)
 
+	ctx, span := tracer.Start(r.Context(), "productHandler")
+	defer span.End()
+
 	id := mux.Vars(r)["id"]
 	if id == "" {
 		renderHTTPError(log, r, w, errors.New("product id not specified"), http.StatusBadRequest)
@@ -159,31 +183,47 @@ func (fe *frontendServer) productHandler(w http.ResponseWriter, r *http.Request)
 	// 添加调试日志
 	log.WithField("id", id).WithField("currency", currentCurrency(r)).Debug("[producthandler]debug info:")
 
-	product, err := fe.GetProduct(r.Context(), id)
+	// 每个下游调用都需要自己的span
+	getCtx, getSpan := tracer.Start(ctx, "GetProduct")
+	product, err := fe.GetProduct(getCtx, id)
+	getSpan.End()
 	if err != nil {
 		log.Infof("could not retrieve product: %v", err)
+		span.RecordError(err)
+		span.SetStatus(codes.Error, "failed to complete the order")
 		renderHTTPError(log, r, w, errors.New("could not retrieve product"), http.StatusInternalServerError)
 		return
 	}
 
-	currencies, err := fe.getCurrencies(r.Context())
+	currencyCtx, currencySpan := tracer.Start(ctx, "GetCurrencies")
+	currencies, err := fe.getCurrencies(currencyCtx)
+	currencySpan.End()
 	if err != nil {
 		log.Infof("could not retrieve currencies: %v", err)
+		span.RecordError(err)
+		span.SetStatus(codes.Error, "failed to complete the order")
 		renderHTTPError(log, r, w, errors.New("could not retrieve currencies"), http.StatusInternalServerError)
 		return
 	}
 
-	// product.GetPriceUsd() 为空？
-	price, err := fe.convertCurrency(r.Context(), product.GetPriceUsd(), currentCurrency(r))
+	convertCurrencyCtx, convertCurrencySpan := tracer.Start(ctx, "ConvertCurrency")
+	price, err := fe.convertCurrency(convertCurrencyCtx, product.GetPriceUsd(), currentCurrency(r))
+	convertCurrencySpan.End()
 	if err != nil {
 		log.Infof("could not convert currency: %v", err)
+		span.RecordError(err)
+		span.SetStatus(codes.Error, "failed to complete the order")
 		renderHTTPError(log, r, w, errors.New("could not convert currency"), http.StatusInternalServerError)
 		return
 	}
 
-	recommendations, err := fe.getRecommendations(r.Context(), sessionID(r), nil) // TODO 第三个参数为nil,也就是随机从所有产品中抽取
+	getRecommendationsCtx, getRecommendationsSpan := tracer.Start(ctx, "GetRecommendations")
+	recommendations, err := fe.getRecommendations(getRecommendationsCtx, sessionID(r), nil) // TODO 第三个参数为nil,也就是随机从所有产品中抽取
+	getRecommendationsSpan.End()
 	if err != nil {
 		log.Infof("could not retrieve recommendations: %v", err)
+		span.RecordError(err)
+		span.SetStatus(codes.Error, fmt.Sprintf("could not retrieve recommendations: %v", err))
 	}
 
 	wrappedProduct := struct {
@@ -191,15 +231,19 @@ func (fe *frontendServer) productHandler(w http.ResponseWriter, r *http.Request)
 		Price *pb.Money
 	}{product, price}
 
-	cart, err := fe.getCart(r.Context(), sessionID(r))
+	getCartCtx, getCartSpan := tracer.Start(ctx, "GetCart")
+	cart, err := fe.getCart(getCartCtx, sessionID(r))
+	getCartSpan.End()
 	if err != nil {
+		span.SetStatus(codes.Error, fmt.Sprintf("could not retrieve cart: %v", err))
+		span.RecordError(err)
 		renderHTTPError(log, r, w, errors.New("could not retrieve cart"), http.StatusInternalServerError)
 		return
 	}
 
 	// 渲染 product.html 模板，把填充后的页面写入 r
 	if err := templates.ExecuteTemplate(w, "product", injectCommonTemplateData(r, map[string]interface{}{
-		"ad":              fe.chooseAd(r.Context(), product.Categories, log),
+		"ad":              fe.chooseAd(ctx, product.Categories, log),
 		"show_currency":   true,
 		"product":         wrappedProduct,
 		"currencies":      currencies,
@@ -213,6 +257,8 @@ func (fe *frontendServer) productHandler(w http.ResponseWriter, r *http.Request)
 // setCurrencyHandler 实现用户手动选择货币种类。请求路径：/setCurrency POST. 详见 header.html: 73
 func (fe *frontendServer) setCurrencyHandler(w http.ResponseWriter, r *http.Request) {
 	log := r.Context().Value(ctxKeyLog{}).(logrus.FieldLogger)
+	_, span := tracer.Start(r.Context(), "setCurrencyHandler")
+	defer span.End()
 
 	cur := r.FormValue("currency_code")                    // 自动从请求中提取名为 currency_code 的参数，无需关心请求方式是POST还是GET
 	payload := validator.SetCurrencyPayload{Currency: cur} // 构造一个 SetCurrencyPayload 对象，包含用户选择的货币代码
@@ -220,6 +266,8 @@ func (fe *frontendServer) setCurrencyHandler(w http.ResponseWriter, r *http.Requ
 	if err := payload.Validate(); err != nil {
 		log.Infof("Invalid currency code %q: %v", cur, err)
 		renderHTTPError(log, r, w, fmt.Errorf("invalid currency code %q", cur), http.StatusBadRequest)
+		span.RecordError(err)
+		span.SetStatus(codes.Error, "failed to complete the order")
 		return
 	}
 
@@ -243,29 +291,47 @@ func (fe *frontendServer) setCurrencyHandler(w http.ResponseWriter, r *http.Requ
 // viewCartHandler 适用于 /cart GET HEAD请求
 func (fe *frontendServer) viewCartHandler(w http.ResponseWriter, r *http.Request) {
 	log := r.Context().Value(ctxKeyLog{}).(logrus.FieldLogger)
+	ctx, span := tracer.Start(r.Context(), "viewCartHandler")
+	defer span.End()
 
 	log.Debug("view cart")
 
-	currencies, err := fe.getCurrencies(r.Context())
+	getCurrenciesCtx, getCurrenciesSpan := tracer.Start(ctx, "GetCurrencies")
+	currencies, err := fe.getCurrencies(getCurrenciesCtx)
+	getCurrenciesSpan.End()
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, "failed to complete the order")
 		renderHTTPError(log, r, w, fmt.Errorf("could not retrieve currencies: %v", err), http.StatusInternalServerError)
 		return
 	}
 
-	cartItems, err := fe.getCart(r.Context(), sessionID(r))
+	getCartCtx, getCartSpan := tracer.Start(ctx, "GetCart")
+	cartItems, err := fe.getCart(getCartCtx, sessionID(r))
+	getCartSpan.End()
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, "failed to complete the order")
 		renderHTTPError(log, r, w, fmt.Errorf("could not retrieve cart items: %v", err), http.StatusInternalServerError)
 		return
 	}
 
-	recommendations, err := fe.getRecommendations(r.Context(), sessionID(r), cartIDs(cartItems))
+	getRecommendationsCtx, getRecommendationsSpan := tracer.Start(ctx, "GetRecommendations")
+	recommendations, err := fe.getRecommendations(getRecommendationsCtx, sessionID(r), cartIDs(cartItems))
+	getRecommendationsSpan.End()
 	if err != nil {
 		// 获取推荐失败不应该影响用户查看购物车的体验，所以这里记录日志但不返回错误给用户
+		span.RecordError(err)
+		span.SetStatus(codes.Error, "failed to complete the order")
 		log.WithField("error", err).Warn("failed to get product recommendations")
 	}
 
-	shippingCost, err := fe.getShippingQuote(r.Context(), cartItems, currentCurrency(r))
+	getSippingQuoteCtx, getShippingQuoteSpan := tracer.Start(ctx, "GetShippingQuote")
+	shippingCost, err := fe.getShippingQuote(getSippingQuoteCtx, cartItems, currentCurrency(r))
+	getShippingQuoteSpan.End()
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, "failed to complete the order")
 		renderHTTPError(log, r, w, fmt.Errorf("could not retrieve shipping quote: %v", err), http.StatusInternalServerError)
 		return
 	}
@@ -278,18 +344,30 @@ func (fe *frontendServer) viewCartHandler(w http.ResponseWriter, r *http.Request
 	}
 	items := make([]cartItemView, len(cartItems))
 	totalPrice := &pb.Money{CurrencyCode: currentCurrency(r)} // 购物车中所有产品的总价
+
 	for i, cartItem := range cartItems {
-		p, err := fe.GetProduct(r.Context(), cartItem.GetProductId())
+		productCtx, productSpan := tracer.Start(ctx, "GetProduct")
+		p, err := fe.GetProduct(productCtx, cartItem.GetProductId())
+		productSpan.End()
 		if err != nil {
 			renderHTTPError(log, r, w, fmt.Errorf("could not get product info: %v", err), http.StatusInternalServerError)
-
+			productSpan.SetStatus(codes.Error, fmt.Sprintf("could not get product info: %v", err))
+			span.RecordError(err)
+			span.SetStatus(codes.Error, "failed to complete the order")
 			return
 		}
-		price, err := fe.convertCurrency(r.Context(), p.GetPriceUsd(), currentCurrency(r))
+
+		convertCurrencyCtx, convertCurrencySpan := tracer.Start(ctx, "ConvertCurrency")
+		price, err := fe.convertCurrency(convertCurrencyCtx, p.GetPriceUsd(), currentCurrency(r))
+		convertCurrencySpan.End()
 		if err != nil {
 			renderHTTPError(log, r, w, fmt.Errorf("could not convert currency: %v", err), http.StatusInternalServerError)
+			convertCurrencySpan.SetStatus(codes.Error, fmt.Sprintf("could not convert currency: %v", err))
+			span.RecordError(err)
+			span.SetStatus(codes.Error, "failed to complete the order")
 			return
 		}
+
 		// 计算每个购物车项的价格 = 产品价格 * 数量。这里直接把 price 乘以数量，得到总价。
 		// 注意 price 是一个 Money 对象，不能直接乘以数量，需要调用 money 包里的函数来实现。
 		multiprice := money.MultiplySlow(price, uint32(cartItem.GetQuantity()))
@@ -320,6 +398,8 @@ func (fe *frontendServer) viewCartHandler(w http.ResponseWriter, r *http.Request
 // addToCartHandler 适用于 /cart POST 请求，处理用户添加商品到购物车的请求
 func (fe *frontendServer) addToCartHandler(w http.ResponseWriter, r *http.Request) {
 	log := r.Context().Value(ctxKeyLog{}).(logrus.FieldLogger)
+	ctx, span := tracer.Start(r.Context(), "addToCartHandler")
+	defer span.End()
 
 	productId := r.FormValue("product_id") // 从请求中提取 product_id 参数
 	quantity, _ := strconv.ParseUint(r.FormValue("quantity"), 10, 32)
@@ -331,16 +411,34 @@ func (fe *frontendServer) addToCartHandler(w http.ResponseWriter, r *http.Reques
 	if err := payload.Validate(); err != nil {
 		log.WithField("validation_error", err).Warn("add to cart validation failed")
 		renderTopValidationPopup(r, w, validator.ValidationErrorResponse(err), http.StatusUnprocessableEntity)
+		span.RecordError(err)
+		span.SetStatus(codes.Error, "failed to complete the order")
 		return
 	}
 	log.WithField("product", payload.ProductID).WithField("quantity", payload.Quantity).Debug("adding to cart")
 
-	p, err := fe.GetProduct(r.Context(), payload.ProductID)
+	productCtx, productSpan := tracer.Start(ctx, "GetProduct")
+	p, err := fe.GetProduct(productCtx, payload.ProductID)
+	productSpan.End()
 	if err != nil {
 		renderHTTPError(log, r, w, fmt.Errorf("could not retrieve product: %v", err), http.StatusInternalServerError)
+		productSpan.SetStatus(codes.Error, fmt.Sprintf("could not retrieve product: %v", err))
+		span.RecordError(err)
+		span.SetStatus(codes.Error, "failed to complete the order")
 		return
 	}
-	fe.insertCart(r.Context(), sessionID(r), p.GetId(), int32(quantity))
+
+	insertCtx, insertSpan := tracer.Start(ctx, "InsertCart")
+	err = fe.insertCart(insertCtx, sessionID(r), p.GetId(), int32(quantity))
+	insertSpan.End()
+	if err != nil {
+		renderHTTPError(log, r, w, fmt.Errorf("could not insert cart item: %v", err), http.StatusInternalServerError)
+		insertSpan.SetStatus(codes.Error, fmt.Sprintf("could not insert cart item: %v", err))
+		span.RecordError(err)
+		span.SetStatus(codes.Error, "failed to complete the order")
+		return
+	}
+
 	referer := r.Referer() // 获取 Referer 头，得到用户之前所在的页面 URL. 等价于 r.Header.Get("referer")
 	if referer == "" {
 		referer = baseUrl + "/" // 如果没有 Referer 头，就跳转到首页
@@ -350,11 +448,15 @@ func (fe *frontendServer) addToCartHandler(w http.ResponseWriter, r *http.Reques
 
 func (fe *frontendServer) emptyCartHandler(w http.ResponseWriter, r *http.Request) {
 	log := r.Context().Value(ctxKeyLog{}).(logrus.FieldLogger)
+	ctx, span := tracer.Start(r.Context(), "emptyCartHandler")
+	defer span.End()
 
 	log.Debug("empty cart")
-	err := fe.emptyCart(r.Context(), sessionID(r))
+	err := fe.emptyCart(ctx, sessionID(r))
 	if err != nil {
 		renderHTTPError(log, r, w, fmt.Errorf("failed to empty cart: %v", err), http.StatusInternalServerError)
+		span.RecordError(err)
+		span.SetStatus(codes.Error, "failed to complete the order")
 		return
 	}
 	http.Redirect(w, r, r.Header.Get("Referer"), http.StatusSeeOther)
@@ -495,6 +597,12 @@ func (fe *frontendServer) emptyCart(ctx context.Context, userID string) error {
 func (fe *frontendServer) placeOrderHandler(w http.ResponseWriter, r *http.Request) {
 	log := r.Context().Value(ctxKeyLog{}).(logrus.FieldLogger)
 	log.Debug("placing order")
+	ctx, span := tracer.Start(r.Context(), "placeOrderHandler")
+	defer span.End()
+	span.SetAttributes(
+		attribute.String("session.id", sessionID(r)),
+		attribute.String("user.currency", currentCurrency(r)),
+	)
 	// 解析表单数据
 	var (
 		email         = r.FormValue("email")
@@ -523,13 +631,16 @@ func (fe *frontendServer) placeOrderHandler(w http.ResponseWriter, r *http.Reque
 	}
 	// 验证表单数据，验证规则：
 	if err := payload.Validate(); err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, "place order validation failed")
 		log.WithField("validation_error", err).Warn("place order validation failed")
 		renderTopValidationPopup(r, w, validator.ValidationErrorResponse(err), http.StatusUnprocessableEntity)
 		return
 	}
 
+	checkoutCtx, checkoutSpan := tracer.Start(ctx, "CheckoutPlaceOrder")
 	order, err := pb.NewCheckoutServiceClient(fe.checkoutSvcConn).PlaceOrder(
-		r.Context(), &pb.PlaceOrderRequest{
+		checkoutCtx, &pb.PlaceOrderRequest{
 			Email: payload.Email,
 			CreditCard: &pb.CreditCardInfo{
 				CreditCardNumber:          payload.CcNumber,
@@ -545,13 +656,29 @@ func (fe *frontendServer) placeOrderHandler(w http.ResponseWriter, r *http.Reque
 				ZipCode:       int32(payload.ZipCode),
 				Country:       payload.Country},
 		})
+	checkoutSpan.End()
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, "failed to complete the order")
 		renderHTTPError(log, r, w, fmt.Errorf("failed to complete the order: %v", err), http.StatusInternalServerError)
 		return
 	}
+	if order.GetOrder() != nil {
+		span.SetAttributes(
+			attribute.String("order.id", order.GetOrder().GetOrderId()),
+			attribute.Int("order.items_count", len(order.GetOrder().GetItems())),
+		)
+	}
 	log.WithField("order", order.GetOrder().GetOrderId()).Info("order placed")
 
-	recommendations, _ := fe.getRecommendations(r.Context(), sessionID(r), nil)
+	recommendationCtx, recommendationSpan := tracer.Start(ctx, "GetRecommendations")
+	recommendations, recommendationErr := fe.getRecommendations(recommendationCtx, sessionID(r), nil)
+	recommendationSpan.End()
+	if recommendationErr != nil {
+		span.RecordError(recommendationErr)
+		span.SetStatus(codes.Error, fmt.Sprintf("could not retrieve recommendations: %v", recommendationErr))
+		log.WithField("error", recommendationErr).Warn("could not retrieve recommendations")
+	}
 
 	// 计算总支付金额
 	totalPaid := order.GetOrder().GetShippingCost()
@@ -559,10 +686,21 @@ func (fe *frontendServer) placeOrderHandler(w http.ResponseWriter, r *http.Reque
 		multPrice := money.MultiplySlow(v.GetCost(), uint32(v.GetItem().GetQuantity()))
 		totalPaid = money.Must(money.Sum(totalPaid, multPrice))
 	}
+	if totalPaid != nil {
+		span.SetAttributes(
+			attribute.String("order.total.currency", totalPaid.GetCurrencyCode()),
+			attribute.Int64("order.total.units", totalPaid.GetUnits()),
+			attribute.Int64("order.total.nanos", int64(totalPaid.GetNanos())),
+		)
+	}
 
 	// 获取可用货币列表
-	currencies, err := fe.getCurrencies(r.Context())
+	currencyCtx, currencySpan := tracer.Start(ctx, "GetCurrencies")
+	currencies, err := fe.getCurrencies(currencyCtx)
+	currencySpan.End()
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, "could not retrieve currencies")
 		renderHTTPError(log, r, w, fmt.Errorf("could not retrieve currencies: %v", err), http.StatusInternalServerError)
 		return
 	}
@@ -581,6 +719,7 @@ func (fe *frontendServer) placeOrderHandler(w http.ResponseWriter, r *http.Reque
 }
 
 func (fe *frontendServer) assistantHandler(w http.ResponseWriter, r *http.Request) {
+
 	currencies, err := fe.getCurrencies(r.Context())
 	if err != nil {
 		renderHTTPError(log, r, w, fmt.Errorf("could not retrieve currencies: %v", err), http.StatusInternalServerError)

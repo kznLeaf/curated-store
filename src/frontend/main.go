@@ -11,7 +11,10 @@ import (
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
 	"go.opentelemetry.io/otel/propagation"
+	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	semconv "go.opentelemetry.io/otel/semconv/v1.39.0"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/gorilla/mux"
 	"github.com/kznLeaf/curated-store/infra/xgrpc"
@@ -61,6 +64,7 @@ const (
 
 var (
 	baseUrl = ""
+	tracer  trace.Tracer
 )
 
 func main() {
@@ -79,11 +83,6 @@ func main() {
 
 	svc := new(frontendServer)
 
-	// https://opentelemetry.io/docs/specs/otel/context/api-propagators/
-	otel.SetTextMapPropagator(
-		propagation.NewCompositeTextMapPropagator(
-			propagation.TraceContext{}, propagation.Baggage{}))
-
 	tp, err := initTracing(log, ctx, svc)
 	if err != nil {
 		log.Warnf("warn: Failed to initialize tracing: %v", err)
@@ -94,6 +93,8 @@ func main() {
 			}
 		}()
 	}
+
+	tracer = tp.Tracer("frontend-tracer")
 
 	srvPort := port
 	// PORT 环境变量定义在k8s清单文件中。
@@ -145,6 +146,8 @@ func main() {
 	log.Fatal(http.ListenAndServe(addr+":"+srvPort, handler))
 }
 
+// initTracing 初始化 OpenTelemetry 追踪
+// reference: https://github.com/open-telemetry/opentelemetry-go-contrib/blob/main/instrumentation/net/http/otelhttp/example/server/server.go
 func initTracing(log logrus.FieldLogger, ctx context.Context, svc *frontendServer) (*sdktrace.TracerProvider, error) {
 	xgrpc.MustMapEnv(&svc.collectorAddr, "COLLECTOR_SERVICE_ADDR")
 	xgrpc.MustConnGRPC(ctx, &svc.collectorConn, svc.collectorAddr)
@@ -156,8 +159,18 @@ func initTracing(log logrus.FieldLogger, ctx context.Context, svc *frontendServe
 	}
 	tp := sdktrace.NewTracerProvider(
 		sdktrace.WithBatcher(exporter),
-		sdktrace.WithSampler(sdktrace.AlwaysSample()))
+		sdktrace.WithSampler(sdktrace.AlwaysSample()),
+		sdktrace.WithResource(resource.NewWithAttributes(
+			semconv.SchemaURL,
+			semconv.ServiceNameKey.String("frontend-service"),
+		)),
+	)
 	otel.SetTracerProvider(tp)
 
-	return tp, err
+	// https://opentelemetry.io/docs/specs/otel/context/api-propagators/
+	otel.SetTextMapPropagator(
+		propagation.NewCompositeTextMapPropagator(
+			propagation.TraceContext{}, propagation.Baggage{}))
+
+	return tp, nil
 }
