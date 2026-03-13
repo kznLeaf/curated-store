@@ -6,6 +6,10 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
+	"go.opentelemetry.io/otel/propagation"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
@@ -34,4 +38,37 @@ func MustConnGRPC(ctx context.Context, conn **grpc.ClientConn, addr string) {
 	if err != nil {
 		logrus.Fatalf("failed to connect to gRPC service %q: %v", addr, err)
 	}
+}
+
+// InitTracing 初始化 OpenTelementry 链路追踪。这个函数会创建一个 OTLP gRPC 导出器，将追踪数据发送到指定的 collector 地址 COLLECTOR_SERVICE_ADDR，
+// 并设置全局的 TracerProvider 和 Propagator。调用以后需要调用返回的 tp 的 Shutdown 方法来确保追踪数据被正确发送。
+func InitTracing(ctx context.Context, log *logrus.Logger) *sdktrace.TracerProvider {
+
+	var (
+		collectorAddr string
+		collectorConn *grpc.ClientConn
+	)
+
+	MustMapEnv(&collectorAddr, "COLLECTOR_SERVICE_ADDR")
+	MustConnGRPC(ctx, &collectorConn, collectorAddr)
+
+	exporter, err := otlptracegrpc.New(
+		ctx,
+		otlptracegrpc.WithGRPCConn(collectorConn),
+	)
+	if err != nil {
+		log.Fatalf("Failed to create trace exporter: %v", err)
+	}
+
+	otel.SetTextMapPropagator(
+		propagation.NewCompositeTextMapPropagator(
+			propagation.TraceContext{}, propagation.Baggage{}))
+
+	tp := sdktrace.NewTracerProvider(
+		sdktrace.WithBatcher(exporter),
+		sdktrace.WithSampler(sdktrace.AlwaysSample()))
+
+	otel.SetTracerProvider(tp)
+
+	return tp
 }

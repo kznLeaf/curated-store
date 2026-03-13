@@ -5,6 +5,7 @@ use (
 	./src/adservice
 	./src/cartservice
 	./src/checkoutservice
+	./src/currencyservice
 	./src/frontend
 	./src/paymentservice
 	./src/productcatalogservice
