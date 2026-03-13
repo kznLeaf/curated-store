@@ -1,14 +1,14 @@
 # This workflow will build a golang project
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-go
 
-name: "Continuous Integration - Main"
+name: "Continuous Integration Unit Tests - Main"
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "cicd-pipeline" ]
     paths-ignore:
       - '**/README.md'
       - 'kubernetes-manifests/**'
@@ -37,4 +37,14 @@ jobs:
           go test
           popd
         done
-
+  skaffold-check:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Install skaffold
+      run: |
+        curl -Lo skaffold https://storage.googleapis.com/skaffold/releases/latest/skaffold-linux-amd64 && \
+        sudo install skaffold /usr/local/bin/
+    - name: Skaffold Check
+      run: |
+        skaffold diagnose --check

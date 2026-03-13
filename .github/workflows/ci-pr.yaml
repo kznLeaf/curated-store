@@ -8,7 +8,7 @@ env:
 
 on:
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main", "feat/cicd-pipeline" ]
     paths-ignore:
       - '**/README.md'
       - 'kubernetes-manifests/**'

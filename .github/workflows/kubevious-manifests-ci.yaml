@@ -18,6 +18,7 @@ on:
   push:
     branches:
       - main
+      - feat/cicd-pipeline
     paths:
       - 'kubernetes-manifests/**'
       - '.github/workflows/kubevious-manifests-ci.yaml'
