@@ -8,7 +8,7 @@ env:
 
 on:
   push:
-    branches: [ "main", "cicd-pipeline" ]
+    branches: [ "main", "feat/cicd-pipeline" ]
     paths:
       - 'src/**'
       - '.github/workflows/ci-main-build.yaml'
