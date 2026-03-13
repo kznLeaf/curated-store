@@ -11,6 +11,7 @@ import (
 
 	"github.com/kznLeaf/curated-store/src/cartservice/cartstore"
 	pb "github.com/kznLeaf/curated-store/src/cartservice/genproto"
+	"github.com/kznLeaf/curated-store/src/common"
 	"github.com/sirupsen/logrus"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"google.golang.org/grpc"
@@ -37,6 +38,14 @@ func init() {
 
 func main() {
 	ctx := context.Background()
+
+	tp := common.InitTracing(ctx, log)
+	defer func() {
+		if err := tp.Shutdown(ctx); err != nil {
+			log.Fatalf("Tracer Provider Shutdown: %v", err)
+		}
+	}()
+
 	port = getEnv("PORT", "7070")
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%s", port))
 	if err != nil {
@@ -75,7 +84,7 @@ func getEnv(key, defaultValue string) string {
 }
 
 // initCartStore 根据环境变量选择存储后端（优先级：Redis > Spanner > AlloyDB > 内存）
-func initCartStore(ctx context.Context) (cartstore.ICartStore, error) {
+func initCartStore(_ context.Context) (cartstore.ICartStore, error) {
 	if redisAddr := os.Getenv("REDIS_ADDR"); redisAddr != "" {
 		log.Info("[cartservice] using Redis cart store")
 		return cartstore.NewRedisCartStore(redisAddr), nil

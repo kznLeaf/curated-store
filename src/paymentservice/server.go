@@ -9,6 +9,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/kznLeaf/curated-store/src/common"
+
 	pb "github.com/kznLeaf/curated-store/src/paymentservice/genproto"
 	"github.com/sirupsen/logrus"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
@@ -72,6 +74,15 @@ func init() {
 }
 
 func main() {
+	ctx := context.Background()
+
+	tp := common.InitTracing(ctx, log)
+	defer func() {
+		if err := tp.Shutdown(ctx); err != nil {
+			log.Fatalf("Tracer Provider Shutdown: %v", err)
+		}
+	}()
+
 	if os.Getenv("PORT") != "" {
 		port = os.Getenv("PORT")
 	}
