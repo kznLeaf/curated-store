@@ -1,7 +1,7 @@
 go 1.25.0
 
 use (
-	./infra/xgrpc
+	./infra
 	./src/adservice
 	./src/cartservice
 	./src/checkoutservice
