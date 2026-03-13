@@ -1,4 +1,4 @@
-package xgrpc
+package common
 
 import (
 	"context"

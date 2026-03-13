@@ -8,7 +8,8 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/kznLeaf/curated-store/infra/xgrpc"
+	"github.com/kznLeaf/curated-store/src/common"
+
 	pb "github.com/kznLeaf/curated-store/src/shippingservice/genproto"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"google.golang.org/grpc"
@@ -22,7 +23,7 @@ func main() {
 	}
 
 	ctx := context.Background()
-	tp := xgrpc.InitTracing(ctx, log)
+	tp := common.InitTracing(ctx, log)
 	defer func() {
 		if err := tp.Shutdown(ctx); err != nil {
 			log.Fatalf("Tracer Provider Shutdown: %v", err)

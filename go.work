@@ -1,10 +1,10 @@
-go 1.25.0
+go 1.26.1
 
 use (
-	./infra
 	./src/adservice
 	./src/cartservice
 	./src/checkoutservice
+	./src/common
 	./src/currencyservice
 	./src/frontend
 	./src/paymentservice
