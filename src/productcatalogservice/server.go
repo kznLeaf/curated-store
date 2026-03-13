@@ -12,14 +12,10 @@ import (
 
 	"github.com/kznLeaf/curated-store/infra/xgrpc"
 	pb "github.com/kznLeaf/curated-store/src/productcatalogservice/genproto"
-	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/propagation"
-	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 
 	"github.com/sirupsen/logrus"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
-	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
 	"google.golang.org/grpc"
 )
 
@@ -49,31 +45,7 @@ func init() {
 func main() {
 	ctx := context.Background()
 
-	var (
-		collectorAddr string
-		collectorConn *grpc.ClientConn
-	)
-
-	xgrpc.MustMapEnv(&collectorAddr, "COLLECTOR_SERVICE_ADDR")
-	xgrpc.MustConnGRPC(ctx, &collectorConn, collectorAddr)
-
-	exporter, err := otlptracegrpc.New(
-		ctx,
-		otlptracegrpc.WithGRPCConn(collectorConn),
-	)
-	if err != nil {
-		log.Fatalf("Failed to create trace exporter: %v", err)
-	}
-
-	otel.SetTextMapPropagator(
-		propagation.NewCompositeTextMapPropagator(
-			propagation.TraceContext{}, propagation.Baggage{}))
-
-	tp := sdktrace.NewTracerProvider(
-		sdktrace.WithBatcher(exporter),
-		sdktrace.WithSampler(sdktrace.AlwaysSample()))
-
-	otel.SetTracerProvider(tp)
+	tp := xgrpc.InitTracing(ctx, log)
 
 	defer func() {
 		if err := tp.Shutdown(ctx); err != nil {

@@ -1,12 +1,16 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"os"
+	"os/signal"
 	"sync"
+	"syscall"
 	"time"
 
+	"github.com/kznLeaf/curated-store/infra/xgrpc"
 	pb "github.com/kznLeaf/curated-store/src/currencyservice/genproto"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 
@@ -36,15 +40,19 @@ func init() {
 }
 
 func main() {
+	ctx := context.Background()
+	tp := xgrpc.InitTracing(ctx, log)
+	defer func() {
+		if err := tp.Shutdown(ctx); err != nil {
+			log.Fatalf("Tracer Provider Shutdown: %v", err)
+		}
+	}()
+
 	if os.Getenv("PORT") != "" {
 		port = os.Getenv("PORT")
 	}
 	log.Infof("[currencyservice]starting server at :%s", port)
-	go run(port)
-	select {}
-}
 
-func run(port string) string {
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%s", port))
 	if err != nil {
 		log.Fatal(err)
@@ -61,7 +69,16 @@ func run(port string) string {
 	pb.RegisterCurrencyServiceServer(srv, svc) // 注册服务实现到 gRPC 服务器
 	healthpb.RegisterHealthServer(srv, svc)    // 注册健康检查服务
 
-	go srv.Serve(listener) // 启动服务器
+	stop, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM, syscall.SIGKILL)
+	defer cancel()
 
-	return listener.Addr().String()
+	go func() {
+		if err := srv.Serve(listener); err != nil {
+			log.Fatalf("failed to serve: %v", err)
+		}
+	}()
+
+	<-stop.Done()
+	srv.GracefulStop()
+	log.Info("shutting down server...")
 }
