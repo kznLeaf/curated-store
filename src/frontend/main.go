@@ -14,7 +14,6 @@ import (
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.39.0"
-	"go.opentelemetry.io/otel/trace"
 
 	"github.com/gorilla/mux"
 	"github.com/kznLeaf/curated-store/infra/xgrpc"
@@ -64,7 +63,6 @@ const (
 
 var (
 	baseUrl = ""
-	tracer  trace.Tracer
 )
 
 func main() {
@@ -93,8 +91,6 @@ func main() {
 			}
 		}()
 	}
-
-	tracer = tp.Tracer("frontend-tracer")
 
 	srvPort := port
 	// PORT 环境变量定义在k8s清单文件中。
