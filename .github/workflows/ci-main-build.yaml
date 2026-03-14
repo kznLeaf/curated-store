@@ -8,12 +8,15 @@ env:
 
 on:
   push:
-    branches: [ "main", "feat/cicd-pipeline" ]
-    paths:
+    branches: [ "main", "dev" ]
+    paths: &file_paths
       - 'src/**'
       - '.github/workflows/ci-main-build.yaml'
       - '!**/README.md'
-
+  pull_request:
+    branches: [ "main", "dev" ]
+    paths: *file_paths
+    
 jobs:
   skaffold-check:
     runs-on: ubuntu-latest

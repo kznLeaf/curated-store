@@ -8,13 +8,13 @@ env:
 
 on:
   push:
-    branches: [ "main", "feat/cicd-pipeline" ]
+    branches: [ "main", "dev" ]
     paths: &file_paths
       - "src/frontend/**"
       - "src/productcatalogservice/**"
       - "!**/README.md"
   pull_request:
-    branches: [ "main", "feat/cicd-pipeline" ]
+    branches: [ "main", "dev" ]
     paths: *file_paths
 
 jobs:

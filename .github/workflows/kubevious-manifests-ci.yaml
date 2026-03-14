@@ -18,14 +18,16 @@ on:
   push:
     branches:
       - main
-      - feat/cicd-pipeline
-    paths:
+      - dev
+    paths: &file_paths
       - 'kubernetes-manifests/**'
       - '.github/workflows/kubevious-manifests-ci.yaml'
   pull_request:
-    paths:
-      - 'kubernetes-manifests/**'
-      - '.github/workflows/kubevious-manifests-ci.yaml'
+    branches:
+      - main
+      - dev
+    paths: *file_paths
+    
 permissions:
   contents: read
 jobs:
