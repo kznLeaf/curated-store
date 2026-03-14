@@ -1,0 +1,43 @@
+# This workflow will build a golang project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-go
+
+name: "ci-main-skaffold-diagnose"
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+on:
+  push:
+    branches: [ "main", "dev" ]
+    paths: &file_paths
+      - 'src/**'
+      - '.github/workflows/ci-main-build.yaml'
+      - '!**/README.md'
+  pull_request:
+    branches: [ "main", "dev" ]
+    paths: *file_paths
+    
+jobs:
+  skaffold-check:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Install skaffold
+      run: |
+        curl -Lo skaffold https://storage.googleapis.com/skaffold/releases/latest/skaffold-linux-amd64 && \
+        sudo install skaffold /usr/local/bin/
+    - name: Skaffold Diagnose
+      run: |
+        skaffold diagnose
+
+    # Gihub Action每次分配的runner都是全新的，无法缓存已构建的镜像，速度较慢
+    # 等到启用自托管之后再集成CD
+
+    # - name: Set up Docker Buildx
+    #   uses: docker/setup-buildx-action@v3
+
+    # - name: Build All Images
+    #   run: |
+    #     skaffold build --push=false --cache-artifacts=true
+    #   env:
+    #     DOCKER_BUILDKIT: 1
