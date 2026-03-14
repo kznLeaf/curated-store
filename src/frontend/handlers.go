@@ -352,10 +352,18 @@ func (fe *frontendServer) addToCartHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	referer := r.Referer() // 获取 Referer 头，得到用户之前所在的页面 URL. 等价于 r.Header.Get("referer")
+	// TODO Referer校验，避免开放重定向漏洞
+
+	referer := r.Referer()
 	if referer == "" {
-		referer = baseUrl + "/" // 如果没有 Referer 头，就跳转到首页
+		referer = baseUrl + "/"
 	}
+
+	// 校验 referer，防止开放重定向。如果校验失败，就直接回到首页
+	if u, parseErr := url.Parse(referer); parseErr != nil || (u.Host != "" && u.Host != r.Host) {
+		referer = baseUrl + "/"
+	}
+
 	http.Redirect(w, r, referer, http.StatusSeeOther)
 }
 
@@ -369,7 +377,17 @@ func (fe *frontendServer) emptyCartHandler(w http.ResponseWriter, r *http.Reques
 		renderHTTPError(log, r, w, fmt.Errorf("failed to empty cart: %v", err), http.StatusInternalServerError)
 		return
 	}
-	http.Redirect(w, r, r.Header.Get("Referer"), http.StatusSeeOther)
+	// TODO Referer校验，避免开放重定向漏洞
+	referer := r.Referer()
+	if referer == "" {
+		referer = baseUrl + "/"
+	}
+
+	// 校验 referer，防止开放重定向。如果校验失败，就直接回到首页
+	if u, parseErr := url.Parse(referer); parseErr != nil || (u.Host != "" && u.Host != r.Host) {
+		referer = baseUrl + "/"
+	}
+	http.Redirect(w, r, referer, http.StatusSeeOther)
 }
 
 // 渲染相关的函数
