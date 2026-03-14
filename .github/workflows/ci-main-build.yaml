@@ -27,6 +27,9 @@ jobs:
       run: |
         skaffold diagnose
 
+    # Gihub Action每次分配的runner都是全新的，无法缓存已构建的镜像，速度较慢
+    # 等到启用自托管之后再集成CD
+
     # - name: Set up Docker Buildx
     #   uses: docker/setup-buildx-action@v3
 
