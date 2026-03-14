@@ -7,10 +7,24 @@ from concurrent import futures
 from grpc_health.v1 import health_pb2
 from grpc_health.v1 import health_pb2_grpc
 from logger import getJSONLogger
+from opentelemetry import trace
+from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from opentelemetry.sdk.trace.sampling import ALWAYS_ON
+from opentelemetry.instrumentation.grpc import GrpcInstrumentorClient
+from opentelemetry.instrumentation.grpc import GrpcInstrumentorServer
 # --------------------------------------------------
 
 logger = getJSONLogger("recommendationservice-server")
 
+
+def must_map_env(key: str) -> str:
+    value = os.environ.get(key)
+    if value is None:
+        raise Exception(f"{key} environment variable must be set")
+    return value
 
 # gRPC server class， implements recommendation service
 # 实现了三个方法：ListRecommendations、Check、Watch
@@ -38,6 +52,7 @@ class RecommendationService(demo_pb2_grpc.RecommendationServiceServicer):
         product_list = [
             filtered_ids[i] for i in indices
         ]  # 根据随机选择的索引，从过滤后的产品 ID 列表中获取推荐的产品 ID 列表
+
         logger.info(
             "[recommandation service][Recv ListRecommendations] product_ids={}".format(
                 product_list
@@ -60,31 +75,35 @@ class RecommendationService(demo_pb2_grpc.RecommendationServiceServicer):
             status=health_pb2.HealthCheckResponse.UNIMPLEMENTED
         )
 
-    def List(self, request, context):
-        return demo_pb2.ListRecommendationsResponse(
-            status=health_pb2.HealthCheckResponse.UNIMPLEMENTED
-        )
-
-
 if __name__ == "__main__":
     logger.info("Starting recommendation service...")
 
+    resource = Resource.create(attributes={
+        "service.name": "recommendationservice",
+    })
+    collector_addr = must_map_env("COLLECTOR_SERVICE_ADDR")
+    exporter = OTLPSpanExporter(endpoint=collector_addr, insecure=True)
+
+    tp = TracerProvider(resource=resource, sampler=ALWAYS_ON)
+    tp.add_span_processor(BatchSpanProcessor(exporter))
+    trace.set_tracer_provider(tp)
+
+    # Instrument gRPC client before making calls
+    GrpcInstrumentorClient().instrument()
+    GrpcInstrumentorServer().instrument() # Instrument gRPC server before starting the server(Very Important!)
+
     port = os.environ.get("PORT", "8080")
-    catalog_addr = os.environ.get(
-        "PRODUCT_CATALOG_SERVICE_ADDR", ""
-    )  # 获取产品目录服务的地址
-    if catalog_addr == "":
-        raise Exception("PRODUCT_CATALOG_SERVICE_ADDR environment variable not set")
+    catalog_addr = must_map_env("PRODUCT_CATALOG_SERVICE_ADDR")
     logger.info("Product catalog service address: %s", catalog_addr)
 
-    channel = grpc.insecure_channel(catalog_addr)  # 创建 gRPC 连接
+    channel = grpc.insecure_channel(catalog_addr)  # 创建 gRPC 连接（已由 GrpcInstrumentorClient 自动埋点）
     product_catalog_stub = demo_pb2_grpc.ProductCatalogServiceStub(
         channel
     )  # 创建产品目录服务的 stub
 
-    # 创建 gRPC Server
+    # 创建 gRPC Server（已由 GrpcInstrumentorServer 自动埋点）
     server = grpc.server(
-        futures.ThreadPoolExecutor(max_workers=10)
+        futures.ThreadPoolExecutor(max_workers=10),
     )  # 创建一个 gRPC 服务器，使用线程池执行器处理请求
 
     # 将 RecommendationService 添加到 gRPC Server 中
@@ -98,4 +117,7 @@ if __name__ == "__main__":
     server.add_insecure_port("[::]:" + port)  # 监听指定端口
     server.start()  # 启动 gRPC 服务器
 
-    server.wait_for_termination()  # 等待服务器终止
+    try:
+        server.wait_for_termination()  # 等待服务器终止
+    finally:
+        tp.shutdown()
