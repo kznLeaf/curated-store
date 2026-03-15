@@ -1,7 +1,0 @@
-grpcio==1.78.0
-grpcio-tools==1.78.0
-grpcio-health-checking==1.78.0
-# 让 pip 自己处理 protobuf 版本，或者锁定到一个宽泛的范围
-protobuf>=5.29.0,<7.0.0
-python-json-logger==3.3.0
-typing-extensions==4.15.0

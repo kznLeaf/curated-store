@@ -1,5 +1,5 @@
 [project]
-name = "emailservice"
+name = "recommendationservice"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
@@ -8,16 +8,18 @@ dependencies = [
     "grpcio==1.78.0",
     "grpcio-health-checking==1.78.0",
     "grpcio-tools==1.78.0",
-    "jinja2==3.1.5",
     "opentelemetry-api>=1.40.0",
+    "opentelemetry-distro>=0.61b0",
     "opentelemetry-exporter-otlp>=1.40.0",
-    "opentelemetry-instrumentation-grpc>=0.61b0",
+    "opentelemetry-exporter-otlp-proto-grpc>=1.40.0",
+    "opentelemetry-instrumentation-grpc>=0.51b0",
     "opentelemetry-sdk>=1.40.0",
     "protobuf>=5.29.0,<7.0.0",
     "python-json-logger==3.3.0",
+    "typing-extensions==4.15.0",
 ]
 
 [dependency-groups]
 dev = [
-    "ruff>=0.15.5",
+    "ruff>=0.15.6",
 ]
