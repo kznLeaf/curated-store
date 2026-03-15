@@ -26,6 +26,7 @@ def must_map_env(key: str) -> str:
         raise Exception(f"{key} environment variable must be set")
     return value
 
+
 # gRPC server class， implements recommendation service
 # 实现了三个方法：ListRecommendations、Check、Watch
 # TODO 目前的 ListRecommendations 实现虽然要求传入userID，但是实际上并没有用到。后续可以给予用户ID做个性化推荐; 推荐的商品中没有排除当前
@@ -75,12 +76,15 @@ class RecommendationService(demo_pb2_grpc.RecommendationServiceServicer):
             status=health_pb2.HealthCheckResponse.UNIMPLEMENTED
         )
 
+
 if __name__ == "__main__":
     logger.info("Starting recommendation service...")
 
-    resource = Resource.create(attributes={
-        "service.name": "recommendationservice",
-    })
+    resource = Resource.create(
+        attributes={
+            "service.name": "recommendationservice",
+        }
+    )
     collector_addr = must_map_env("COLLECTOR_SERVICE_ADDR")
     exporter = OTLPSpanExporter(endpoint=collector_addr, insecure=True)
 
@@ -90,13 +94,15 @@ if __name__ == "__main__":
 
     # Instrument gRPC client before making calls
     GrpcInstrumentorClient().instrument()
-    GrpcInstrumentorServer().instrument() # Instrument gRPC server before starting the server(Very Important!)
+    GrpcInstrumentorServer().instrument()  # Instrument gRPC server before starting the server(Very Important!)
 
     port = os.environ.get("PORT", "8080")
     catalog_addr = must_map_env("PRODUCT_CATALOG_SERVICE_ADDR")
     logger.info("Product catalog service address: %s", catalog_addr)
 
-    channel = grpc.insecure_channel(catalog_addr)  # 创建 gRPC 连接（已由 GrpcInstrumentorClient 自动埋点）
+    channel = grpc.insecure_channel(
+        catalog_addr
+    )  # 创建 gRPC 连接（已由 GrpcInstrumentorClient 自动埋点）
     product_catalog_stub = demo_pb2_grpc.ProductCatalogServiceStub(
         channel
     )  # 创建产品目录服务的 stub

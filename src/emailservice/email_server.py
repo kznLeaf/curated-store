@@ -45,6 +45,7 @@ class BaseEmailService:
             status=health_pb2.HealthCheckResponse.UNIMPLEMENTED
         )
 
+
 class DummyEmailService(BaseEmailService):
     def SendOrderConfirmation(self, request, context):
         logger.info(
@@ -55,17 +56,20 @@ class DummyEmailService(BaseEmailService):
 
         return demo_pb2.Empty()
 
+
 def must_map_env(key: str) -> str:
     value = os.environ.get(key)
     if value is None:
         raise Exception(f"{key} environment variable must be set")
     return value
 
-if __name__ == "__main__":
 
-    resource = Resource.create(attributes={
-        "service.name": "emailservice",
-    })
+if __name__ == "__main__":
+    resource = Resource.create(
+        attributes={
+            "service.name": "emailservice",
+        }
+    )
     collector_addr = must_map_env("COLLECTOR_SERVICE_ADDR")
     exporter = OTLPSpanExporter(endpoint=collector_addr, insecure=True)
 
@@ -75,7 +79,7 @@ if __name__ == "__main__":
 
     # Instrument gRPC client before making calls
     GrpcInstrumentorClient().instrument()
-    GrpcInstrumentorServer().instrument() # Instrument gRPC server before starting the server(Very Important!)
+    GrpcInstrumentorServer().instrument()  # Instrument gRPC server before starting the server(Very Important!)
 
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     service = DummyEmailService()
