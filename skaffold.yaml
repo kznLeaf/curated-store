@@ -67,3 +67,13 @@ profiles: # 该预设用于谷歌平台
     - ./kubernetes-manifests/base/loadgenerator.yaml
   deploy:
     kubectl: {}
+# Auto port forwarding for frontend, Jaeger or other services.
+portForward:
+  - resourceType: service
+    resourceName: frontend
+    port: 80
+    localPort: 8080
+  - resourceType: service
+    resourceName: jaeger
+    port: 16686
+    localPort: 16686
