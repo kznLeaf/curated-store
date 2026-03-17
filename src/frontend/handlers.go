@@ -631,8 +631,21 @@ func (fe *frontendServer) assistantHandler(w http.ResponseWriter, r *http.Reques
 }
 
 func (fe *frontendServer) loginHandler(w http.ResponseWriter, r *http.Request) {
+	// 1. 显式解析表单数据
+	if err := r.ParseForm(); err != nil {
+		log.WithError(err).Error("无法解析表单数据")
+		http.Error(w, "Bad Request", http.StatusBadRequest)
+		return
+	}
+
 	log.Info("对喽")
-	log.WithFields(logrus.Fields{"Form": r.Form}).Info("登录表单数据")
+
+	// 2. 此时 r.Form 才会有值
+	// 注意：r.Form 包含 URL 参数和 POST 参数；如果只想取 POST 数据，可以用 r.PostForm
+	log.WithFields(logrus.Fields{
+		"Form":   r.Form,
+		"Scopes": r.Form["extra_scopes"], // 拿到的是个 []string
+	}).Info("登录表单数据")
 
 }
 

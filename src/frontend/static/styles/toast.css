@@ -32,7 +32,3 @@
     color: #0074cc;
     border-color: #0074cc;
 }
-.login-pill-btn:active {
-    background-color: #e3e6e8;
-    transform: translateY(1px); 
-}
