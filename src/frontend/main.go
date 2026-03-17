@@ -131,6 +131,7 @@ func main() {
 	r.HandleFunc(baseUrl+"/cart/checkout", svc.placeOrderHandler).Methods(http.MethodPost) // 结账 post
 	r.HandleFunc(baseUrl+"/cart/empty", svc.emptyCartHandler).Methods(http.MethodPost)     // 清空购物车 post
 	r.HandleFunc(baseUrl+"/assistant", svc.assistantHandler).Methods(http.MethodGet)
+	r.HandleFunc(baseUrl+"/login", svc.loginHandler).Methods(http.MethodPost)
 	var handler http.Handler = r                   // r 实现了 http.Handler 接口，属于业务Handler
 	handler = &logHandler{log: log, next: handler} // Router实现了 http.Handler 接口
 	handler = ensureSessionID(handler)             // 注入 sessionID 管理中间件

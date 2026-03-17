@@ -630,6 +630,12 @@ func (fe *frontendServer) assistantHandler(w http.ResponseWriter, r *http.Reques
 
 }
 
+func (fe *frontendServer) loginHandler(w http.ResponseWriter, r *http.Request) {
+	log.Info("对喽")
+	log.WithFields(logrus.Fields{"Form": r.Form}).Info("登录表单数据")
+
+}
+
 // renderTopValidationPopup 在用户输入有误时，渲染一个包含错误信息的弹窗，并引导用户返回之前的页面继续操作
 func renderTopValidationPopup(r *http.Request, w http.ResponseWriter, err error, _ int) {
 	log.WithField("validation_error", err).Warn("form validation failed")

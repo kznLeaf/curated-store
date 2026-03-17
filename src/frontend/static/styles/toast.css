@@ -10,3 +10,19 @@
     from { top: -50px; opacity: 0; }
     to { top: 16px; opacity: 1; }
 }
+.login-pill-btn {
+    border: 1.5px solid currentColor;
+    border-radius: 20px;
+    background: transparent;
+    padding: 4px 16px;
+    font-size: 14px;
+    font-family: inherit;
+    cursor: pointer;
+    color: inherit;
+    white-space: nowrap;
+    line-height: 1.5;
+}
+
+.login-pill-btn:hover {
+    background: rgba(0, 0, 0, 0.06);
+}
