@@ -29,26 +29,20 @@ go run . -issuer-root-ca ./ssl/ca.pem
 
 First, run `gencert.sh` to generate necessary files. 
 
-The, run `./set-up-secrets.sh` before you deploy resources, which includes three steps:
+Then, run `./set-up-secrets.sh` before you deploy resources, which includes two steps:
 
-1. Create Namespace `dex` for Dex:
-
-```bash
-kubectl create namespace dex
-```
-
-2. Create TLS Secret:
+1. Create TLS Secret in `default` namespace:
 
 ```bash
-kubectl -n dex create secret tls dex.example.com.tls \
+kubectl -n default create secret tls dex.example.com.tls \
   --cert=./cert.pem \
   --key=./key.pem
 ```
 
-3. Create GitHub Credentials Secret, and before that you must ensure `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET` have been added as your shell environment varibles.
+2. Create GitHub Credentials Secret in `default` namespace, and before that you must ensure `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET` have been added as your shell environment varibles.
 
 ```bash
-kubectl -n dex create secret generic github-client \
+kubectl -n default create secret generic github-client \
   --from-literal=client-id=$GITHUB_CLIENT_ID \
   --from-literal=client-secret=$GITHUB_CLIENT_SECRET
 ```

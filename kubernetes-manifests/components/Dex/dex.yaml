@@ -1,15 +1,9 @@
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: dex
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
     app: dex
   name: dex
-  namespace: dex
 spec:
   replicas: 1 # 调试建议先用 1 个副本，方便看日志
   selector:
@@ -62,7 +56,6 @@ kind: ConfigMap
 apiVersion: v1
 metadata:
   name: dex
-  namespace: dex
 data:
   config.yaml: |
     issuer: https://localhost:5556/dex
@@ -70,7 +63,7 @@ data:
       type: kubernetes
       config:
         inCluster: true
-        namespace: dex
+        namespace: default
     web:
       https: 0.0.0.0:8080
       tlsCert: /etc/dex/tls/tls.crt
@@ -110,7 +103,6 @@ apiVersion: v1
 kind: Service
 metadata:
   name: dex
-  namespace: dex
 spec:
   type: ClusterIP # 调试时用 ClusterIP 配合 port-forward 即可
   ports:
@@ -125,7 +117,6 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: dex
-  namespace: dex
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -150,4 +141,4 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: dex
-  namespace: dex
+  namespace: default

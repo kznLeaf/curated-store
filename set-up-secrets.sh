@@ -1,16 +1,13 @@
 #!/bin/bash
 
-# 1. 创建命名空间（如果不存在）
-kubectl get ns dex >/dev/null 2>&1 || kubectl create namespace dex
-
 echo "--- Preparing TLS Secret ---"
-kubectl -n dex create secret tls dex.example.com.tls \
+kubectl -n default create secret tls dex.example.com.tls \
   --cert=./kubernetes-manifests/components/Dex/ssl/cert.pem \
   --key=./kubernetes-manifests/components/Dex/ssl/key.pem \
 
 echo "--- Preparing CA file"
-kubectl -n dex create secret generic dex-ca \
-  --from-file=ca.pem=./kubernetes-manifests/components/Dex/ssl/ca.pem 
+kubectl -n default create secret generic dex-ca \
+  --from-file=./kubernetes-manifests/components/Dex/ssl/ca.pem 
 
 echo "--- Preparing GitHub Credentials ---"
 if [ -z "$GITHUB_CLIENT_ID" ] || [ -z "$GITHUB_CLIENT_SECRET" ]; then
@@ -18,9 +15,9 @@ if [ -z "$GITHUB_CLIENT_ID" ] || [ -z "$GITHUB_CLIENT_SECRET" ]; then
     exit 1
 fi
 
-kubectl -n dex create secret generic github-client \
+kubectl -n default create secret generic github-client \
   --from-literal=client-id="$GITHUB_CLIENT_ID" \
   --from-literal=client-secret="$GITHUB_CLIENT_SECRET" \
 
-echo "--- All secrets are ready in namespace 'dex' ---"
+echo "--- All secrets are ready in namespace 'default' ---"
 

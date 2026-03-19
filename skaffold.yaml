@@ -81,6 +81,6 @@ portForward:
     localPort: 16686
   - resourceType: service
     resourceName: dex
-    namespace: dex
+    namespace: default
     port: 8080
     localPort: 5556
