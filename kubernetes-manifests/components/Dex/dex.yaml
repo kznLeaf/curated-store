@@ -9,6 +9,7 @@ metadata:
   labels:
     app: dex
   name: dex
+  namespace: dex
 spec:
   replicas: 1 # 调试建议先用 1 个副本，方便看日志
   selector:
