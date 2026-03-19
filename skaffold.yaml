@@ -77,3 +77,7 @@ portForward:
     resourceName: jaeger
     port: 16686
     localPort: 16686
+  - resourceType: service
+    resourceName: dex
+    port: 8080
+    localPort: 5556

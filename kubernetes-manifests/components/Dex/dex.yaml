@@ -23,6 +23,7 @@ spec:
       serviceAccountName: dex
       containers:
       - image: ghcr.io/dexidp/dex:v2.32.0
+        imagePullPolicy: IfNotPresent
         name: dex
         command: ["/usr/local/bin/dex", "serve", "/etc/dex/cfg/config.yaml"]
         ports:
