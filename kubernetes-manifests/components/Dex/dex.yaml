@@ -34,11 +34,11 @@ spec:
             secretKeyRef:
               name: github-client
               key: client-secret
-        readinessProbe:
-          httpGet:
-            path: /dex/healthz
-            port: 8080
-            scheme: HTTPS
+        # readinessProbe:
+        #   httpGet:
+        #     path: /healthz
+        #     port: 8080
+        #     scheme: HTTP
         volumeMounts:
         - name: config
           mountPath: /etc/dex/cfg
@@ -58,7 +58,7 @@ metadata:
   name: dex
 data:
   config.yaml: |
-    issuer: https://localhost:5556/dex
+    issuer: https://dex:8080/dex
     storage:
       type: kubernetes
       config:

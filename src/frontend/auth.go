@@ -46,11 +46,11 @@ type app struct {
 }
 
 var (
-	a app
 	// The code verifier for the PKCE request, that the app originally generated before the authorization request.
 	// It is a cryptographically random string using the characters A-Z, a-z, 0-9, and the punctuation characters -._~
 	// (hyphen, period, underscore, and tilde), between 43 and 128 characters long.
-	// The server will later use the code verifier to verify the authorization code exchange, ensuring that the client that initiated the authorization request is the same client that is exchanging the authorization code for tokens.
+	// The server will later use the code verifier to verify the authorization code exchange, ensuring that the client
+	// that initiated the authorization request is the same client that is exchanging the authorization code for tokens.
 	//
 	// See https://www.oauth.com/oauth2-servers/pkce/authorization-request/
 	codeVerifier string
@@ -73,6 +73,7 @@ func init() {
 }
 
 func runAuth(r *mux.Router) {
+
 	var (
 		a         app
 		issuerURL string
@@ -86,9 +87,9 @@ func runAuth(r *mux.Router) {
 	flag.StringVar(&a.clientID, "client-id", "example-app", "OAuth2 client ID")
 	flag.StringVar(&a.clientSecret, "client-secret", "ZXhhbXBsZS1hcHAtc2VjcmV0", "OAuth2 client secret")
 	flag.BoolVar(&a.pkce, "pkce", true, "Use PKCE flow")
-	flag.StringVar(&a.redirectURI, "redirect-uri", "https://localhost:5556/dex/callback", "Callback URL")
-	flag.StringVar(&issuerURL, "issuer", "https://localhost:5556/dex", "URL of OIDC issuer")
-	flag.StringVar(&listen, "listen", "http://localhost:8080", "Address to listen at")
+	flag.StringVar(&a.redirectURI, "redirect-uri", "https://localhost:5556/dex/callback", "Callback URL") // Dex container's 8080 port is forwarded to localhost:5556
+	flag.StringVar(&issuerURL, "issuer", "http://dex:8080/dex", "URL of OIDC issuer") // used within the cluster, so we can use the service name "dex" to access it. 
+	flag.StringVar(&listen, "listen", "http://localhost:8080", "Address to listen at") // homepage
 	flag.StringVar(&tlsCert, "tls-cert", "", "X509 cert file")
 	flag.StringVar(&tlsKey, "tls-key", "", "Private key file")
 	flag.StringVar(&rootCAs, "issuer-root-ca", "", "Root CAs for issuer")
@@ -101,11 +102,11 @@ func runAuth(r *mux.Router) {
 		fmt.Fprintf(os.Stderr, "parse redirect-uri: %v\n", err)
 		os.Exit(1)
 	}
-	listenURL, err := url.Parse(listen)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "parse listen address: %v\n", err)
-		os.Exit(1)
-	}
+	// listenURL, err := url.Parse(listen)
+	// if err != nil {
+	// 	fmt.Fprintf(os.Stderr, "parse listen address: %v\n", err)
+	// 	os.Exit(1)
+	// }
 
 	// 初始化 HTTP Client
 	if rootCAs != "" {
@@ -163,19 +164,21 @@ func runAuth(r *mux.Router) {
 	r.HandleFunc(u.Path, a.handleCallback)
 
 	log.Printf("listening on %s", listen)
-	switch listenURL.Scheme {
-	case "http":
-		err = http.ListenAndServe(listenURL.Host, nil)
-	case "https":
-		err = http.ListenAndServeTLS(listenURL.Host, tlsCert, tlsKey, nil)
-	default:
-		err = fmt.Errorf("unsupported scheme: %q", listenURL.Scheme)
-	}
 
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "error: %v\n", err)
-		os.Exit(2)
-	}
+	// TODO HTTPS support
+	// switch listenURL.Scheme {
+	// case "http":
+	// 	err = http.ListenAndServe(listenURL.Host, nil)
+	// case "https":
+	// 	err = http.ListenAndServeTLS(listenURL.Host, tlsCert, tlsKey, nil)
+	// default:
+	// 	err = fmt.Errorf("unsupported scheme: %q", listenURL.Scheme)
+	// }
+
+	// if err != nil {
+	// 	fmt.Fprintf(os.Stderr, "error: %v\n", err)
+	// 	os.Exit(2)
+	// }
 }
 
 // handleLogin initiates the OAuth2 authorization code flow by constructing the appropriate scopes,

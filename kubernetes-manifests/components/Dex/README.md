@@ -39,6 +39,8 @@ kubectl -n default create secret tls dex.example.com.tls \
   --key=./key.pem
 ```
 
+The CA file will be mounted as Secret in `set-up-secrets.sh` so that the frontendservice can access it.
+
 2. Create GitHub Credentials Secret in `default` namespace, and before that you must ensure `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET` have been added as your shell environment varibles.
 
 ```bash

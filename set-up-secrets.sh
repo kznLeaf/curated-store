@@ -1,5 +1,10 @@
 #!/bin/bash
 
+echo "Cleaning up existing secrets..."
+kubectl -n default delete secret dex.example.com.tls --ignore-not-found
+kubectl -n default delete secret dex-ca --ignore-not-found
+kubectl -n default delete secret github-client --ignore-not-found
+
 echo "--- Preparing TLS Secret ---"
 kubectl -n default create secret tls dex.example.com.tls \
   --cert=./kubernetes-manifests/components/Dex/ssl/cert.pem \

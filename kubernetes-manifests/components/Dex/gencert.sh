@@ -17,6 +17,9 @@ subjectAltName = @alt_names
 [alt_names]
 DNS.1 = localhost
 DNS.2 = dex.example.com
+DNS.3 = dex
+DNS.4 = dex.default.svc
+DNS.5 = dex.default.svc.cluster.local
 IP.1 = 127.0.0.1
 IP.2 = ::1
 EOF

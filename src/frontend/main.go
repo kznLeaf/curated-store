@@ -130,7 +130,7 @@ func main() {
 	r.HandleFunc(baseUrl+"/assistant", svc.assistantHandler).Methods(http.MethodGet)
 	r.HandleFunc(baseUrl+"/login", svc.loginHandler).Methods(http.MethodPost)
 
-	// runAuth(r)
+	runAuth(r)
 
 	var handler http.Handler = r
 	handler = &logHandler{log: log, next: handler}
