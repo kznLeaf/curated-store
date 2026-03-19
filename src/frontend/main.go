@@ -93,7 +93,7 @@ func main() {
 	}
 
 	srvPort := port
-	// PORT 环境变量定义在k8s清单文件中。
+
 	if os.Getenv("PORT") != "" {
 		srvPort = os.Getenv("PORT")
 	}
@@ -107,7 +107,7 @@ func main() {
 	xgrpc.MustMapEnv(&svc.recommendationSvcAddr, "RECOMMENDATION_SERVICE_ADDR")
 	xgrpc.MustMapEnv(&svc.cartSvcAddr, "CART_SERVICE_ADDR")
 	xgrpc.MustMapEnv(&svc.checkoutSvcAddr, "CHECKOUT_SERVICE_ADDR")
-	// 利用上一步读取的服务地址，建立gRPC连接
+
 	xgrpc.MustConnGRPC(ctx, &svc.productCatalogSvcConn, svc.productCatalogSvcAddr)
 	xgrpc.MustConnGRPC(ctx, &svc.currencySvcConn, svc.currencySvcAddr)
 	xgrpc.MustConnGRPC(ctx, &svc.shippingSvcConn, svc.shippingSvcAddr)
@@ -116,29 +116,28 @@ func main() {
 	xgrpc.MustConnGRPC(ctx, &svc.cartSvcConn, svc.cartSvcAddr)
 	xgrpc.MustConnGRPC(ctx, &svc.checkoutSvcConn, svc.checkoutSvcAddr)
 
-	// baseUrl := os.Getenv("BASE_URL") // 该环境变量位于 kustomize/components/custom-base-url/kustomization.yaml
-
-	// 设置路由规则和处理函数
 	r := mux.NewRouter()
-	r.HandleFunc(baseUrl+"/", svc.homeHandler).Methods(http.MethodGet, http.MethodHead)                               // 首页 get
-	r.HandleFunc(baseUrl+"/product/{id}", svc.productHandler).Methods(http.MethodGet, http.MethodHead)                // 产品详情页 get
-	r.HandleFunc(baseUrl+"/_healthz", func(w http.ResponseWriter, _ *http.Request) { fmt.Fprint(w, "[frontend]ok") }) // 健康检查
-	r.HandleFunc(baseUrl+"/setCurrency", svc.setCurrencyHandler).Methods(http.MethodPost)                             // 用户手动切换货币
+	r.HandleFunc(baseUrl+"/", svc.homeHandler).Methods(http.MethodGet, http.MethodHead)
+	r.HandleFunc(baseUrl+"/product/{id}", svc.productHandler).Methods(http.MethodGet, http.MethodHead)
+	r.HandleFunc(baseUrl+"/_healthz", func(w http.ResponseWriter, _ *http.Request) { fmt.Fprint(w, "[frontend]ok") })
+	r.HandleFunc(baseUrl+"/setCurrency", svc.setCurrencyHandler).Methods(http.MethodPost)
 	r.HandleFunc(baseUrl+"/cart", svc.viewCartHandler).Methods(http.MethodGet, http.MethodHead)
-	r.PathPrefix(baseUrl + "/static/").Handler(http.StripPrefix(baseUrl+"/static/", http.FileServer(http.Dir("./static/")))) // 加载static/目录下的静态资源
-	r.HandleFunc(baseUrl+"/cart", svc.addToCartHandler).Methods(http.MethodPost)                                             // 添加商品到购物车
+	r.PathPrefix(baseUrl + "/static/").Handler(http.StripPrefix(baseUrl+"/static/", http.FileServer(http.Dir("./static/"))))
+	r.HandleFunc(baseUrl+"/cart", svc.addToCartHandler).Methods(http.MethodPost)
 	r.HandleFunc(baseUrl+"/cart", svc.viewCartHandler).Methods(http.MethodGet, http.MethodHead)
-	r.HandleFunc(baseUrl+"/cart/checkout", svc.placeOrderHandler).Methods(http.MethodPost) // 结账 post
-	r.HandleFunc(baseUrl+"/cart/empty", svc.emptyCartHandler).Methods(http.MethodPost)     // 清空购物车 post
+	r.HandleFunc(baseUrl+"/cart/checkout", svc.placeOrderHandler).Methods(http.MethodPost)
+	r.HandleFunc(baseUrl+"/cart/empty", svc.emptyCartHandler).Methods(http.MethodPost)
 	r.HandleFunc(baseUrl+"/assistant", svc.assistantHandler).Methods(http.MethodGet)
-	var handler http.Handler = r                   // r 实现了 http.Handler 接口，属于业务Handler
-	handler = &logHandler{log: log, next: handler} // Router实现了 http.Handler 接口
-	handler = ensureSessionID(handler)             // 注入 sessionID 管理中间件
+	r.HandleFunc(baseUrl+"/login", svc.loginHandler).Methods(http.MethodPost)
+	// runAuth(r)
+
+	var handler http.Handler = r
+	handler = &logHandler{log: log, next: handler}
+	handler = ensureSessionID(handler)
 	log.Infof("starting server on %s:%s", addr, srvPort)
 
-	handler = otelhttp.NewHandler(handler, "frontend") // 使用 OpenTelemetry HTTP 中间件，实现服务端自动埋点创建入站span
+	handler = otelhttp.NewHandler(handler, "frontend") // Auto instrumentation for HTTP server.
 
-	// 启动 HTTP 服务器。传入handler，这样每次收到HTTP请求自动调用中间件链和路由规则
 	log.Fatal(http.ListenAndServe(addr+":"+srvPort, handler))
 }
 

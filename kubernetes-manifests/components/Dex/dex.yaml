@@ -1,0 +1,153 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: dex
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: dex
+  name: dex
+  namespace: dex
+spec:
+  replicas: 1 # 调试建议先用 1 个副本，方便看日志
+  selector:
+    matchLabels:
+      app: dex
+  template:
+    metadata:
+      labels:
+        app: dex
+    spec:
+      serviceAccountName: dex
+      containers:
+      - image: ghcr.io/dexidp/dex:v2.32.0
+        imagePullPolicy: IfNotPresent
+        name: dex
+        command: ["/usr/local/bin/dex", "serve", "/etc/dex/cfg/config.yaml"]
+        ports:
+        - name: https
+          containerPort: 8080 
+        env:
+        - name: GITHUB_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: github-client
+              key: client-id
+        - name: GITHUB_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: github-client
+              key: client-secret
+        readinessProbe:
+          httpGet:
+            path: /dex/healthz
+            port: 8080
+            scheme: HTTPS
+        volumeMounts:
+        - name: config
+          mountPath: /etc/dex/cfg
+        - name: tls
+          mountPath: /etc/dex/tls
+      volumes:
+      - name: config
+        configMap:
+          name: dex
+      - name: tls
+        secret:
+          secretName: dex.example.com.tls
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: dex
+  namespace: dex
+data:
+  config.yaml: |
+    issuer: https://localhost:5556/dex
+    storage:
+      type: kubernetes
+      config:
+        inCluster: true
+        namespace: dex
+    web:
+      https: 0.0.0.0:8080
+      tlsCert: /etc/dex/tls/tls.crt
+      tlsKey: /etc/dex/tls/tls.key
+    
+    connectors:
+    - type: github
+      id: github
+      name: GitHub
+      config:
+        clientID: $GITHUB_CLIENT_ID
+        clientSecret: $GITHUB_CLIENT_SECRET
+        # 对应 GitHub OAuth App 的 Callback 设置
+        redirectURI: https://localhost:5556/dex/callback
+        loadAllGroups: false
+        teamNameField: slug
+        useLoginAsID: false
+
+    oauth2:
+      skipApprovalScreen: true
+
+    staticClients:
+    - id: onlineshop
+      redirectURIs:
+      - 'http://localhost:8080/callback' # Frontend运行在 8080
+      name: 'Example App'
+      secret: ZXhhbXBsZS1hcHAtc2VjcmV0
+
+    enablePasswordDB: true
+    staticPasswords:
+    - email: "admin@example.com"
+      hash: "$2a$10$2b2cU8CPhOTaGrs1HRQuAueS7JTT5ZHsHSzYiFPm1leZck7Mc8T4W"
+      username: "admin"
+      name: "Admin User"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dex
+  namespace: dex
+spec:
+  type: ClusterIP # 调试时用 ClusterIP 配合 port-forward 即可
+  ports:
+  - name: dex
+    port: 8080
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    app: dex
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: dex
+  namespace: dex
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: dex
+rules:
+- apiGroups: ["dex.coreos.com"]
+  resources: ["*"]
+  verbs: ["*"]
+- apiGroups: ["apiextensions.k8s.io"]
+  resources: ["customresourcedefinitions"]
+  verbs: ["create", "get", "list", "watch", "update", "patch", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: dex
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: dex
+subjects:
+- kind: ServiceAccount
+  name: dex
+  namespace: dex

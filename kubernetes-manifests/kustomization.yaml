@@ -49,4 +49,5 @@ resources:
 #     count: 2
 components:
 - ./components/opentelementry
+- ./components/Dex
 

@@ -10,3 +10,25 @@
     from { top: -50px; opacity: 0; }
     to { top: 16px; opacity: 1; }
 }
+.login-pill-btn {
+    appearance: none;
+    -webkit-appearance: none;
+    background: transparent;
+    border: 1px solid #5a5a5a; 
+    border-radius: 4px;        
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 12px;
+    font-size: 13px;      
+    font-weight: 500;
+    font-family: inherit;
+    color: #3b4045;            
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s ease; 
+}
+.login-pill-btn:hover {
+    background-color: #f8f9f9;  
+    color: #0074cc;
+    border-color: #0074cc;
+}
