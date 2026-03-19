@@ -35,6 +35,10 @@ spec:
         runAsGroup: 1000
         runAsNonRoot: true
         runAsUser: 1000
+      volumes:
+        - name: dex-ca
+          secret:
+            secretName: dex-ca
       containers:
         - name: server
           securityContext:
@@ -47,6 +51,8 @@ spec:
           image: frontend
           ports:
           - containerPort: 8080
+          args:
+            - "-issuer-root-ca=/etc/dex-ca/ca.pem"
           readinessProbe:
             initialDelaySeconds: 10
             httpGet:
@@ -97,6 +103,10 @@ spec:
           # As part of an optional Google Cloud demo, you can run an optional microservice called the "packaging service".
           # - name: PACKAGING_SERVICE_URL
           #   value: "" # This value would look like "http://123.123.123"
+          volumeMounts:
+            - name: dex-ca
+              mountPath: /etc/dex-ca
+              readOnly: true
           resources:
             requests:
               cpu: 100m

@@ -8,6 +8,10 @@ kubectl -n dex create secret tls dex.example.com.tls \
   --cert=./kubernetes-manifests/components/Dex/ssl/cert.pem \
   --key=./kubernetes-manifests/components/Dex/ssl/key.pem \
 
+echo "--- Preparing CA file"
+kubectl -n dex create secret generic dex-ca \
+  --from-file=ca.pem=./kubernetes-manifests/components/Dex/ssl/ca.pem 
+
 echo "--- Preparing GitHub Credentials ---"
 if [ -z "$GITHUB_CLIENT_ID" ] || [ -z "$GITHUB_CLIENT_SECRET" ]; then
     echo "Error: GITHUB_CLIENT_ID or GITHUB_CLIENT_SECRET is not set in your environment."

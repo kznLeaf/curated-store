@@ -135,6 +135,7 @@ func runAuth(r *mux.Router) {
 		fmt.Fprintf(os.Stderr, "failed to query provider: %v\n", err)
 		os.Exit(1)
 	}
+	log.Info("Successfully connected to OIDC provider at ", issuerURL)
 
 	var s struct {
 		ScopesSupported []string `json:"scopes_supported"`
