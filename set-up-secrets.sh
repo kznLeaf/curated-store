@@ -15,6 +15,7 @@ kubectl -n default create secret generic dex-ca \
   --from-file=./kubernetes-manifests/components/Dex/ssl/ca.pem 
 
 echo "--- Preparing GitHub Credentials ---"
+# ensure the required environment variables have been set in your shell before you run this script
 if [ -z "$GITHUB_CLIENT_ID" ] || [ -z "$GITHUB_CLIENT_SECRET" ]; then
     echo "Error: GITHUB_CLIENT_ID or GITHUB_CLIENT_SECRET is not set in your environment."
     exit 1

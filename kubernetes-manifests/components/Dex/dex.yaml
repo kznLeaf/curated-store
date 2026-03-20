@@ -21,11 +21,11 @@ spec:
         name: dex
         command: ["/usr/local/bin/dex", "serve", "/etc/dex/cfg/config.yaml"]
         ports:
-        - name: https
-          containerPort: 8080 
+        - name: http
+          containerPort: 5556 
         env:
         - name: GITHUB_CLIENT_ID
-          valueFrom:
+          valueFrom: # obtain GitHub OAuth App credentials from Kubernetes Secret, which has been added via set-up-secrets.sh
             secretKeyRef:
               name: github-client
               key: client-id
@@ -37,7 +37,7 @@ spec:
         # readinessProbe:
         #   httpGet:
         #     path: /healthz
-        #     port: 8080
+        #     port: 5556
         #     scheme: HTTP
         volumeMounts:
         - name: config
@@ -58,14 +58,14 @@ metadata:
   name: dex
 data:
   config.yaml: |
-    issuer: https://dex:8080/dex
+    issuer: http://dex:5556/dex
     storage:
       type: kubernetes
       config:
         inCluster: true
         namespace: default
     web:
-      https: 0.0.0.0:8080
+      http: 0.0.0.0:5556
       tlsCert: /etc/dex/tls/tls.crt
       tlsKey: /etc/dex/tls/tls.key
     
@@ -77,7 +77,7 @@ data:
         clientID: $GITHUB_CLIENT_ID
         clientSecret: $GITHUB_CLIENT_SECRET
         # 对应 GitHub OAuth App 的 Callback 设置
-        redirectURI: https://localhost:5556/dex/callback
+        redirectURI: https://dex:5556/dex/callback
         loadAllGroups: false
         teamNameField: slug
         useLoginAsID: false
@@ -92,12 +92,6 @@ data:
       name: 'Example App'
       secret: ZXhhbXBsZS1hcHAtc2VjcmV0
 
-    enablePasswordDB: true
-    staticPasswords:
-    - email: "admin@example.com"
-      hash: "$2a$10$2b2cU8CPhOTaGrs1HRQuAueS7JTT5ZHsHSzYiFPm1leZck7Mc8T4W"
-      username: "admin"
-      name: "Admin User"
 ---
 apiVersion: v1
 kind: Service
@@ -107,9 +101,9 @@ spec:
   type: ClusterIP # 调试时用 ClusterIP 配合 port-forward 即可
   ports:
   - name: dex
-    port: 8080
+    port: 5556
     protocol: TCP
-    targetPort: 8080
+    targetPort: 5556
   selector:
     app: dex
 ---

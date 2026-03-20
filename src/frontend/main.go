@@ -26,6 +26,8 @@ import (
 // - <ServiceName>SvcAddr：服务地址
 // - <ServiceName>SvcConn: gRPC连接
 type frontendServer struct {
+	app
+
 	productCatalogSvcAddr string
 	productCatalogSvcConn *grpc.ClientConn
 
@@ -117,6 +119,9 @@ func main() {
 	xgrpc.MustConnGRPC(ctx, &svc.checkoutSvcConn, svc.checkoutSvcAddr)
 
 	r := mux.NewRouter()
+	runAuth(r, &svc.app) // Initialize authentication logic.
+	// runAuth includes two routes: login and callback
+	log.Info("Auth Initialized")
 	r.HandleFunc(baseUrl+"/", svc.homeHandler).Methods(http.MethodGet, http.MethodHead)
 	r.HandleFunc(baseUrl+"/product/{id}", svc.productHandler).Methods(http.MethodGet, http.MethodHead)
 	r.HandleFunc(baseUrl+"/_healthz", func(w http.ResponseWriter, _ *http.Request) { fmt.Fprint(w, "[frontend]ok") })
@@ -128,9 +133,6 @@ func main() {
 	r.HandleFunc(baseUrl+"/cart/checkout", svc.placeOrderHandler).Methods(http.MethodPost)
 	r.HandleFunc(baseUrl+"/cart/empty", svc.emptyCartHandler).Methods(http.MethodPost)
 	r.HandleFunc(baseUrl+"/assistant", svc.assistantHandler).Methods(http.MethodGet)
-	r.HandleFunc(baseUrl+"/login", svc.loginHandler).Methods(http.MethodPost)
-
-	runAuth(r)
 
 	var handler http.Handler = r
 	handler = &logHandler{log: log, next: handler}
@@ -142,7 +144,7 @@ func main() {
 	log.Fatal(http.ListenAndServe(addr+":"+srvPort, handler))
 }
 
-// initTracing 初始化 OpenTelemetry 追踪
+// initTracing Initialize OpenTelemetry tracing
 // reference: https://github.com/open-telemetry/opentelemetry-go-contrib/blob/main/instrumentation/net/http/otelhttp/example/server/server.go
 func initTracing(log logrus.FieldLogger, ctx context.Context, svc *frontendServer) (*sdktrace.TracerProvider, error) {
 	xgrpc.MustMapEnv(&svc.collectorAddr, "COLLECTOR_SERVICE_ADDR")

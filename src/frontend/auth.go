@@ -72,10 +72,9 @@ func init() {
 	codeChallenge = oauth2.S256ChallengeFromVerifier(codeVerifier)
 }
 
-func runAuth(r *mux.Router) {
+func runAuth(r *mux.Router, a *app) {
 
 	var (
-		a         app
 		issuerURL string
 		listen    string
 		tlsCert   string
@@ -85,10 +84,10 @@ func runAuth(r *mux.Router) {
 	)
 
 	flag.StringVar(&a.clientID, "client-id", "example-app", "OAuth2 client ID")
-	flag.StringVar(&a.clientSecret, "client-secret", "ZXhhbXBsZS1hcHAtc2VjcmV0", "OAuth2 client secret")
+	flag.StringVar(&a.clientSecret, "client-secret", "ThisIsNotASecureSecret", "OAuth2 client secret")
 	flag.BoolVar(&a.pkce, "pkce", true, "Use PKCE flow")
-	flag.StringVar(&a.redirectURI, "redirect-uri", "https://localhost:5556/dex/callback", "Callback URL") // Dex container's 8080 port is forwarded to localhost:5556
-	flag.StringVar(&issuerURL, "issuer", "http://dex:8080/dex", "URL of OIDC issuer") // used within the cluster, so we can use the service name "dex" to access it. 
+	flag.StringVar(&a.redirectURI, "redirect-uri", "https://dex:5556/dex/callback", "Callback URL")
+	flag.StringVar(&issuerURL, "issuer", "http://dex:5556/dex", "URL of OIDC issuer")  // must https. used on auto discovery
 	flag.StringVar(&listen, "listen", "http://localhost:8080", "Address to listen at") // homepage
 	flag.StringVar(&tlsCert, "tls-cert", "", "X509 cert file")
 	flag.StringVar(&tlsKey, "tls-key", "", "Private key file")
@@ -96,6 +95,19 @@ func runAuth(r *mux.Router) {
 	flag.BoolVar(&debug, "debug", false, "Debug mode")
 
 	flag.Parse()
+
+	if envID := os.Getenv("GITHUB_CLIENT_ID"); envID != "" {
+		a.clientID = envID
+	} else {
+		fmt.Fprintf(os.Stderr, "Error: GITHUB_CLIENT_ID is not set in your environment.\n")
+		os.Exit(1)
+	}
+	if envSecret := os.Getenv("GITHUB_CLIENT_SECRET"); envSecret != "" {
+		a.clientSecret = envSecret
+	} else {
+		fmt.Fprintf(os.Stderr, "Error: GITHUB_CLIENT_SECRET is not set in your environment.\n")
+		os.Exit(1)
+	}
 
 	u, err := url.Parse(a.redirectURI)
 	if err != nil {
@@ -108,7 +120,6 @@ func runAuth(r *mux.Router) {
 	// 	os.Exit(1)
 	// }
 
-	// 初始化 HTTP Client
 	if rootCAs != "" {
 		client, err := httpClientForRootCAs(rootCAs)
 		if err != nil {
@@ -116,7 +127,7 @@ func runAuth(r *mux.Router) {
 			os.Exit(1)
 		}
 		a.client = client
-		fmt.Println("Using custom root CAs from file:", rootCAs)
+		fmt.Println("[HTTPS] Using custom root CAs from file:", rootCAs)
 		fmt.Println()
 	}
 	if debug {

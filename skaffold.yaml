@@ -3,7 +3,6 @@ kind: Config
 metadata:
   name: app
 build:
-  platforms: ["linux/amd64"]
   artifacts:
   - image: productcatalogservice # Kustomize（通过 Skaffold）通过 image 字段的值 来匹配配置文件和微服务。
     context: src/productcatalogservice
@@ -82,5 +81,5 @@ portForward:
   - resourceType: service
     resourceName: dex
     namespace: default
-    port: 8080
+    port: 5556
     localPort: 5556

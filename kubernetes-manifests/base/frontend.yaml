@@ -52,7 +52,6 @@ spec:
           ports:
           - containerPort: 8080
           args:
-            - "-issuer=https://dex:8080/dex"
             - "-issuer-root-ca=/etc/dex-ca/ca.pem"
           readinessProbe:
             initialDelaySeconds: 10

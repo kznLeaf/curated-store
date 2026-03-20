@@ -630,25 +630,6 @@ func (fe *frontendServer) assistantHandler(w http.ResponseWriter, r *http.Reques
 
 }
 
-func (fe *frontendServer) loginHandler(w http.ResponseWriter, r *http.Request) {
-	// 1. 显式解析表单数据
-	if err := r.ParseForm(); err != nil {
-		log.WithError(err).Error("无法解析表单数据")
-		http.Error(w, "Bad Request", http.StatusBadRequest)
-		return
-	}
-
-	log.Info("对喽")
-
-	// 2. 此时 r.Form 才会有值
-	// 注意：r.Form 包含 URL 参数和 POST 参数；如果只想取 POST 数据，可以用 r.PostForm
-	log.WithFields(logrus.Fields{
-		"Form":   r.Form,
-		"Scopes": r.Form["extra_scopes"], // 拿到的是个 []string
-	}).Info("登录表单数据")
-
-}
-
 // renderTopValidationPopup 在用户输入有误时，渲染一个包含错误信息的弹窗，并引导用户返回之前的页面继续操作
 func renderTopValidationPopup(r *http.Request, w http.ResponseWriter, err error, _ int) {
 	log.WithField("validation_error", err).Warn("form validation failed")
