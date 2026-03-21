@@ -58,7 +58,7 @@ const (
 	// 会话管理: 从 Cookie 中提取 sessionID 作为购物车标识符。
 	cookiePrefix    = "shop_"
 	cookieSessionID = cookiePrefix + "session-id"
-	cookieCurrency  = cookiePrefix + "currency"
+	cookieCurrency  = cookiePrefix + "currency" // cookie 中存储用户选择的货币
 )
 
 var (
@@ -131,9 +131,11 @@ func main() {
 	r.HandleFunc(baseUrl+"/cart/checkout", svc.placeOrderHandler).Methods(http.MethodPost) // 结账 post
 	r.HandleFunc(baseUrl+"/cart/empty", svc.emptyCartHandler).Methods(http.MethodPost)     // 清空购物车 post
 	r.HandleFunc(baseUrl+"/assistant", svc.assistantHandler).Methods(http.MethodGet)
+	r.HandleFunc(baseUrl+"/login", svc.loginHandler).Methods(http.MethodGet, http.MethodPost)
 	var handler http.Handler = r                   // r 实现了 http.Handler 接口，属于业务Handler
 	handler = &logHandler{log: log, next: handler} // Router实现了 http.Handler 接口
 	handler = ensureSessionID(handler)             // 注入 sessionID 管理中间件
+	handler = authorize(handler)          
 	log.Infof("starting server on %s:%s", addr, srvPort)
 
 	handler = otelhttp.NewHandler(handler, "frontend") // 使用 OpenTelemetry HTTP 中间件，实现服务端自动埋点创建入站span

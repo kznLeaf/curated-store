@@ -26,6 +26,7 @@ resources:
  - ./base/emailservice.yaml
  - ./base/cartservice.yaml
  - ./base/checkoutservice.yaml
+ - ./base/oauth2-proxy.yaml
 # replicas:
 #   - name: frontend
 #     count: 2
@@ -50,3 +51,7 @@ resources:
 components:
 - ./components/opentelementry
 
+secretGenerator:
+- name: oauth2-proxy-credentials
+  envs:
+  - .env.secret # write the secrets in this file, and they will be automatically converted into Kubernetes Secret

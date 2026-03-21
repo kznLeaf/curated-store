@@ -37,11 +37,33 @@ type platformDetails struct {
 	css      string
 	provider string
 }
-type ctxKeyLog struct{}
+type ctxKeyLog struct{} // used for logging
 
 // ctxKeySessionID 定义一个零内存占用的、强类型的键，value为 sessionID
 type ctxKeySessionID struct{}
-type ctxKeyRequestID struct{}
+type ctxKeyUserID struct{}
+type ctxKeyEmail struct{}
+type ctxKeyRequestID struct{} // used for tracing, not for session management
+
+func (fe *frontendServer) loginHandler(w http.ResponseWriter, r *http.Request) {
+
+	authz := r.Header.Get("Authorization")
+	if authz != "" {
+		http.Redirect(w, r, "/", http.StatusFound)
+		return
+	}
+	returnTo := r.URL.Query().Get("rd") // 或者自定义逻辑
+	if returnTo == "" {
+		returnTo = "/"
+	}
+
+	// 3. 构造重定向地址 (使用 fmt.Sprintf 拼接)
+	// 注意：不要在代码里写 {{ }}，那是给 HTML 用的
+	target := fmt.Sprintf("/oauth2/start?rd=%s", returnTo)
+
+	log.Infof("引导用户前往登录: %s", target)
+	http.Redirect(w, r, target, http.StatusFound)
+}
 
 func (fe *frontendServer) homeHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
@@ -78,7 +100,7 @@ func (fe *frontendServer) homeHandler(w http.ResponseWriter, r *http.Request) {
 		ps[i] = productView{p, price}
 	}
 
-	cart, err := fe.getCart(ctx, sessionID(r))
+	cart, err := fe.getCart(ctx, userID(r))
 	if err != nil {
 		renderHTTPError(log, r, w, errors.New("could not retrieve cart"), http.StatusInternalServerError)
 		return
@@ -182,7 +204,7 @@ func (fe *frontendServer) productHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	recommendations, err := fe.getRecommendations(ctx, sessionID(r), nil) // TODO 第三个参数为nil,也就是随机从所有产品中抽取
+	recommendations, err := fe.getRecommendations(ctx, userID(r), nil) // TODO 第三个参数为nil,也就是随机从所有产品中抽取
 	if err != nil {
 		log.Infof("could not retrieve recommendations: %v", err)
 	}
@@ -192,7 +214,7 @@ func (fe *frontendServer) productHandler(w http.ResponseWriter, r *http.Request)
 		Price *pb.Money
 	}{product, price}
 
-	cart, err := fe.getCart(ctx, sessionID(r))
+	cart, err := fe.getCart(ctx, userID(r))
 	if err != nil {
 		renderHTTPError(log, r, w, errors.New("could not retrieve cart"), http.StatusInternalServerError)
 		return
@@ -254,13 +276,13 @@ func (fe *frontendServer) viewCartHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	cartItems, err := fe.getCart(ctx, sessionID(r))
+	cartItems, err := fe.getCart(ctx, userID(r))
 	if err != nil {
 		renderHTTPError(log, r, w, fmt.Errorf("could not retrieve cart items: %v", err), http.StatusInternalServerError)
 		return
 	}
 
-	recommendations, err := fe.getRecommendations(ctx, sessionID(r), cartIDs(cartItems))
+	recommendations, err := fe.getRecommendations(ctx, userID(r), cartIDs(cartItems))
 	if err != nil {
 		// 获取推荐失败不应该影响用户查看购物车的体验，所以这里记录日志但不返回错误给用户
 		log.WithField("error", err).Warn("failed to get product recommendations")
@@ -346,7 +368,7 @@ func (fe *frontendServer) addToCartHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	err = fe.insertCart(ctx, sessionID(r), p.GetId(), int32(quantity))
+	err = fe.insertCart(ctx, userID(r), p.GetId(), int32(quantity))
 	if err != nil {
 		renderHTTPError(log, r, w, fmt.Errorf("could not insert cart item: %v", err), http.StatusInternalServerError)
 		return
@@ -372,7 +394,7 @@ func (fe *frontendServer) emptyCartHandler(w http.ResponseWriter, r *http.Reques
 	ctx := r.Context()
 
 	log.Debug("empty cart")
-	err := fe.emptyCart(ctx, sessionID(r))
+	err := fe.emptyCart(ctx, userID(r))
 	if err != nil {
 		renderHTTPError(log, r, w, fmt.Errorf("failed to empty cart: %v", err), http.StatusInternalServerError)
 		return
@@ -460,6 +482,16 @@ func sessionID(r *http.Request) string {
 		return ""
 	}
 	return v.(string)
+}
+
+// userID 返回上下文中的用户ID。
+// 严格模式下不回退到 sessionID。
+func userID(r *http.Request) string {
+	v := r.Context().Value(ctxKeyUserID{})
+	if user, ok := v.(string); ok && user != "" {
+		return user
+	}
+	return ""
 }
 
 // currentCurrency 从请求的 Cookie 中提取用户的货币,如果没有设置则返回默认货币。
@@ -567,7 +599,7 @@ func (fe *frontendServer) placeOrderHandler(w http.ResponseWriter, r *http.Reque
 				CreditCardExpirationMonth: int32(payload.CcMonth),
 				CreditCardExpirationYear:  int32(payload.CcYear),
 				CreditCardCvv:             int32(payload.CcCVV)},
-			UserId:       sessionID(r),
+			UserId:       userID(r),
 			UserCurrency: currentCurrency(r),
 			Address: &pb.Address{
 				StreetAddress: payload.StreetAddress,
@@ -582,7 +614,7 @@ func (fe *frontendServer) placeOrderHandler(w http.ResponseWriter, r *http.Reque
 	}
 	log.WithField("order", order.GetOrder().GetOrderId()).Info("order placed")
 
-	recommendations, recommendationErr := fe.getRecommendations(ctx, sessionID(r), nil)
+	recommendations, recommendationErr := fe.getRecommendations(ctx, userID(r), nil)
 	if recommendationErr != nil {
 		log.WithField("error", recommendationErr).Warn("could not retrieve recommendations")
 	}

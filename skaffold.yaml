@@ -69,7 +69,7 @@ profiles: # 该预设用于谷歌平台
 # Auto port forwarding for frontend, Jaeger or other services.
 portForward:
   - resourceType: service
-    resourceName: frontend
+    resourceName: frontend-external
     port: 80
     localPort: 8080
   - resourceType: service

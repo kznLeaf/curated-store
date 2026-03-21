@@ -92,6 +92,8 @@ spec:
           #   value: "true"
           - name: ENABLE_ASSISTANT
             value: "true"
+          - name: AUTH_TOKEN_COOKIE_SECURE
+            value: "false"
           # - name: FRONTEND_MESSAGE
           #   value: "Replace this with a message you want to display on all pages."
           # As part of an optional Google Cloud demo, you can run an optional microservice called the "packaging service".
@@ -125,15 +127,15 @@ kind: Service
 metadata:
   name: frontend-external # 该 Service 用于暴露 frontend 服务到集群外部，允许外部流量访问 frontend。如果是云平台，会自动触发一个负载均衡器；如果是本地集群，会等待分配外部IP。
   labels:
-    app: frontend
+    app: oauth2-proxy
 spec:
   type: LoadBalancer
   selector:
-    app: frontend
+    app: oauth2-proxy
   ports:
   - name: http
     port: 80
-    targetPort: 8080
+    targetPort: 4180
 ---
 apiVersion: v1
 kind: ServiceAccount
