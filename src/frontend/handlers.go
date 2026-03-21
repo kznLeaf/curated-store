@@ -39,8 +39,7 @@ type platformDetails struct {
 }
 type ctxKeyLog struct{} // used for logging
 
-// ctxKeySessionID 定义一个零内存占用的、强类型的键，value为 sessionID
-type ctxKeySessionID struct{}
+type ctxKeySessionID struct{} // ctxKeySessionID 定义一个零内存占用的、强类型的键，value为 sessionID
 type ctxKeyUserID struct{}
 type ctxKeyEmail struct{}
 type ctxKeyRequestID struct{} // used for tracing, not for session management
@@ -52,16 +51,14 @@ func (fe *frontendServer) loginHandler(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/", http.StatusFound)
 		return
 	}
-	returnTo := r.URL.Query().Get("rd") // 或者自定义逻辑
+	returnTo := r.URL.Query().Get("rd")
 	if returnTo == "" {
 		returnTo = "/"
 	}
 
-	// 3. 构造重定向地址 (使用 fmt.Sprintf 拼接)
-	// 注意：不要在代码里写 {{ }}，那是给 HTML 用的
 	target := fmt.Sprintf("/oauth2/start?rd=%s", returnTo)
 
-	log.Infof("引导用户前往登录: %s", target)
+	log.Infof("Redirecting to login: %s", target)
 	http.Redirect(w, r, target, http.StatusFound)
 }
 
@@ -106,7 +103,6 @@ func (fe *frontendServer) homeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 设置平台信息
 	var env = os.Getenv("ENV_PLATFORM") // 如果没有该环境变量，说明是local环境。GCP会设置该环境变量.
 	if env == "" || !stringinSlice(validEnvs, env) {
 		log.Infof("could not retrieve platform details: %v", err)

@@ -119,6 +119,9 @@ func (lh *logHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // 2. 没有 cookie，且环境变量指定了不共享会话：生成一个随机的 sessionID，不共享同一个会话
 // 3. 没有 cookie，且发生的是其他类型的 err ：直接中断请求，不再往后执行
 // 4. 有 cookie，且 cookie 无效：生成一个随机的 sessionID，不共享同一个会话
+//
+// 在引入 OAuth2 认证之前，用户身份信息是通过会话 ID 进行关联的，所以确保每个请求都有一个有效的 sessionID 是非常重要的。
+// 现在 sessionID 不再和用户身份直接关联，但是仍予以保留
 func ensureSessionID(next http.Handler) http.HandlerFunc {
 	// Notice that "type HandlerFunc func(ResponseWriter, *Request)"
 	// 也就是说实现了 "type Handler interface { ServeHTTP(ResponseWriter, *Request) }" 接口的函数会自动变成 HandlerFunc 类型
@@ -149,10 +152,12 @@ func ensureSessionID(next http.Handler) http.HandlerFunc {
 		// 将 sessionID 设置到请求上下文中，后续处理函数可以获取到
 		ctx := context.WithValue(r.Context(), ctxKeySessionID{}, sessionID)
 		r = r.WithContext(ctx)
-		next.ServeHTTP(w, r) // 调用 ServeHTTP
+		next.ServeHTTP(w, r) 
 	}
 }
 
+// authorize handle authorization for incoming requests. Obtain userID and email from header, and store them in context for later use. 
+// If paths that are not in the whitelist, then will skip authorization and directly call the next handler.
 func authorize(next http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
