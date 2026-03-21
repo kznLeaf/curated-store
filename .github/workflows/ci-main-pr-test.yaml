@@ -21,6 +21,12 @@ jobs:
   code-tests:
     runs-on: ubuntu-latest
     steps:
+    - name: Create Dummy Secret File for Validation
+      run: |
+        touch kubernetes-manifests/.env.secret
+        echo "OAUTH2_PROXY_CLIENT_ID=mock-id" >> kubernetes-manifests/.env.secret
+        echo "OAUTH2_PROXY_CLIENT_SECRET=mock-secret" >> kubernetes-manifests/.env.secret
+        echo "OAUTH2_PROXY_COOKIE_SECRET=O5lVpn4w9vsHFjFLP6YNnZ-jc9I_GQj4Uc8cKxc=" >> kubernetes-manifests/.env.secret
     - uses: actions/checkout@v4
     - name: Set up Go
       uses: actions/setup-go@v4
