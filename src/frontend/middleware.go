@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// 中间件，通过装饰起模式实现了会话管理和日志记录的功能。
+// 中间件，通过装饰器模式实现了会话管理和日志记录的功能。
 // 先执行 ensureSessionID 中间件，确保每个请求都有一个 sessionID，并将其注入到请求上下文中；
 // 再执行 logHandler 中间件，记录请求的基本信息（路径、方法、请求 ID、会话 ID）以及请求完成时的状态码、响应大小和处理耗时等信息。
 
@@ -23,9 +23,11 @@ import (
 	"context"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
+	auth "github.com/kznLeaf/curated-store/src/frontend/validator"
 	"github.com/sirupsen/logrus"
 )
 
@@ -58,8 +60,12 @@ func (r *responseRecorder) WriteHeader(statusCode int) {
 }
 
 // ServeHTTP 实现 http.Handler 接口，作为日志记录中间件处理 HTTP 请求。
-// 每当服务器收到一个新的请求，都会单独打开一个 goroutine 调用这个函数来处理请求。
 func (lh *logHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if strings.HasSuffix(r.URL.Path, "/_healthz") {
+		lh.next.ServeHTTP(w, r)
+		return
+	}
+
 	// 1. 获取请求上下文并生成唯一的请求 ID
 	ctx := r.Context()
 	requestID, _ := uuid.NewRandom()
@@ -144,5 +150,65 @@ func ensureSessionID(next http.Handler) http.HandlerFunc {
 		ctx := context.WithValue(r.Context(), ctxKeySessionID{}, sessionID)
 		r = r.WithContext(ctx)
 		next.ServeHTTP(w, r) // 调用 ServeHTTP
+	}
+}
+
+func authorize(next http.Handler) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+
+		if user, ok := ctx.Value(ctxKeyUserID{}).(string); !ok || strings.TrimSpace(user) == "" {
+			if forwardedUser := strings.TrimSpace(r.Header.Get("X-Forwarded-User")); forwardedUser != "" {
+				ctx = context.WithValue(ctx, ctxKeyUserID{}, forwardedUser)
+			}
+		}
+
+		if email, ok := ctx.Value(ctxKeyEmail{}).(string); !ok || strings.TrimSpace(email) == "" {
+			if forwardedEmail := strings.TrimSpace(r.Header.Get("X-Forwarded-Email")); forwardedEmail != "" {
+				ctx = context.WithValue(ctx, ctxKeyEmail{}, forwardedEmail)
+			}
+		}
+
+		r = r.WithContext(ctx)
+
+		if auth.IsAuthWhitelistPath(r.URL.Path, baseUrl) {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		user, _ := ctx.Value(ctxKeyUserID{}).(string)
+		email, _ := ctx.Value(ctxKeyEmail{}).(string)
+		if strings.TrimSpace(user) == "" || strings.TrimSpace(email) == "" {
+			http.Error(w, "Unauthorized: Missing User Identity", http.StatusUnauthorized)
+			return
+		}
+
+		// 中国大陆环境下无法获取 Google 公钥，故注释掉签名验证的逻辑
+
+		// authz := auth.ParseBearerToken(r.Header.Get("Authorization"))
+		// if authz == "" {
+		// 	log.Warn("请求头中缺失 Authorization Token 拒绝访问")
+		// 	http.Error(w, "Unauthorized: Missing Token", http.StatusUnauthorized)
+		// 	return
+		// }
+
+		// rawIDToken := auth.ParseBearerToken(authz)
+		// log.Infof("rawIDToken: %s", rawIDToken)
+
+		// verifier, err := auth.GetVerifier(ctx)
+		// if err != nil {
+		// 	log.Errorf("verifier initialization failed: %v", err)
+		// 	http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		// 	return
+		// }
+
+		// idToken, err := verifier.Verify(ctx, rawIDToken)
+		// if err != nil {
+		// 	log.Errorf("ID Token authorization failed: %v", err)
+		// 	http.Error(w, "Unauthorized: Invalid Token", http.StatusUnauthorized)
+		// 	return
+		// }
+
+		next.ServeHTTP(w, r)
 	}
 }

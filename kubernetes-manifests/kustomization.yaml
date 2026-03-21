@@ -26,6 +26,7 @@ resources:
  - ./base/emailservice.yaml
  - ./base/cartservice.yaml
  - ./base/checkoutservice.yaml
+ - ./base/oauth2-proxy.yaml
 # replicas:
 #   - name: frontend
 #     count: 2
