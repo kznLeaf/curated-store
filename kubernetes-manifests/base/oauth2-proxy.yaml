@@ -4,6 +4,9 @@ metadata:
   name: oauth2-proxy
   labels:
     app: oauth2-proxy
+annotations:
+    # avoid "Could not find Secret oauth2-proxy-credentials referenced in envFrom" error in ci
+    kubevious.io/ignore-rule: "container-env-from-secret-ref"
 spec:
   replicas: 1
   selector:
