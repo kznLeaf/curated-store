@@ -19,8 +19,8 @@ If you wish to experiment with different backends, you can modify the appropriat
 
 ## Integration with Jaeger
 
-Refer to the configuration file [otel-collector-jaeger.yaml](./otel-collector-jaeger.yaml). Jaeger is deployed as a pod within the cluster and exposes its Web UI on port **16686**, which is forwarded to `localhost:16686`. To access this page in a local browser, visit http://localhost:16686 in your browser, and you will see something similar to the following:
+See the configuration file [otel-collector-jaeger.yaml](./otel-collector-jaeger.yaml). Jaeger is deployed as a pod within the cluster and exposes its Web UI on port **16686**, which is forwarded to `localhost:16686`. To access this page in a local browser, visit http://localhost:16686 in your browser, and you will see something similar to the following:
 
-![jaeger](./jaeger.png)
+![](./jaeger.png)
 
 ![](./jaeger2.png)

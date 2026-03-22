@@ -102,3 +102,5 @@ The cluster will now use the locally cached image for future deployments.
 ## Documentation
 
 - [Middleware Chain](./docs/middleware.md)
+- [Login via Google](./docs/login.md)
+- [Opentelemetry Integration](./kubernetes-manifests/components/opentelemetry/README.md)
