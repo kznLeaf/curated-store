@@ -73,8 +73,6 @@ docker rmi $(docker images --format "{{.Repository}}:{{.Tag}}" | grep -E "servic
 <details>
 <summary>Deployment for Mainland China Users</summary>
 
-Under the pretext of *unvetted content* mainland China has long utilized the [GFW](https://en.wikipedia.org/wiki/Great_Firewall) to perform indiscriminate blocking of overseas websites, with Docker's official registries also caught in the crossfire. Consequently, the Chinese internet has seen a surge of low-quality "Docker Mirror" sites—such as the xuanyuan mirror, which treat image hosting as a primary profit-making scheme. However, for individual users, Docker Hub should not, and must not, ever become a paid service. I strongly advise against using such paywalled mirrors; to do so is to feed a *predatory* system. Furthermore, the image lists provided by services like xuanyuan are severely incomplete—for instance, the Alpine-based images used in this project cannot be pulled from them, making them unworthy of a single cent of your investment.
-
 Within the project's Dockerfiles, except for the base images which may require manual pulling, all dependency sources have been pre-configured with mainland China mirror sites, ensuring that dependency retrieval proceeds without issue.
 
 If you encounter pull errors such as
