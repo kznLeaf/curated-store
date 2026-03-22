@@ -1,12 +1,12 @@
-Restructured from Google's [microservices-demo](https://github.com/GoogleCloudPlatform/microservices-demo), this project includes the following key updates:
+**Curated Store** is restructured from Google's [microservices-demo](https://github.com/GoogleCloudPlatform/microservices-demo), including the following key updates:
 
 * **Go Rewrite:** Ported all non-Python backend services to Go.
-* **OpenTelemetry Integration:** Integrated full-chain tracing,  services report traces to a central Collector, which exports to **Jaeger**.
-* **Observability:** Added Kubernetes configurations for **Jaeger** to enable the tracing Web UI in local deployments.
+* **OpenTelemetry Integration:** Integrated **full-chain tracing**, services report traces to a central Collector, which exports to **Jaeger**.
+* **Observability:** Added Kubernetes configurations for Jaeger to enable the tracing **Web UI** in local deployments.
 * **Python Modernization:** Replaced `pip` with `uv` for more efficient Python package management.
 * **Network Optimization:** Configured Dockerfiles with local mirror sources to bypass network issues (*pre-pulling* base images recommended).
 * **Refactoring & Bug Fixes:** Improved code quality and reliability, including implementing *graceful shutdowns* and standardizing development practices.
-* **Identity & Auth:** Integrated [OAuth2 Proxy](https://github.com/oauth2-proxy/oauth2-proxy) with **Google login**, handling authentication, callbacks, session management, and identity header propagation to business contexts.
+* **Authentication:** Add a login button on the homepage header and integrated [OAuth2 Proxy](https://github.com/oauth2-proxy/oauth2-proxy) with **Google login**, handling authentication, callbacks, session management, and identity header propagation to business contexts.
 
 ## Architecture
 
@@ -30,13 +30,13 @@ Restructured from Google's [microservices-demo](https://github.com/GoogleCloudPl
 | **jaeger** | Go (3rd-party) | Distributed tracing backend and UI; stores and visualizes distributed call chains. |
 | **shoppingassistantservice (Reserved)** | TBD | AI assistant entry point; currently reserved via frontend toggles and routing for future independent service integration. |
 
-## Quickstart(local)
+## Quickstart
 
 ### Prerequisites
 
-This project runs on a Kubernetes cluster on Linux or macOS. While `minikube` and `kind` are both options for local clusters, **`kind`** is recommended.
+Curated Store runs on a local Kubernetes cluster on **Linux** or **macOS**. While `minikube` and `kind` are both options for local clusters, **`kind`** is recommended.
 
-Ensure you have installed `skaffold`, `kind`, `kubectl`, `docker`, and `docker-buildx` (included in Docker Desktop for macOS). Arch Linux users can quickly install these via `pacman`.
+Ensure you have installed `skaffold`, `kind`, `kubectl`, `docker`, and `docker-buildx` (included in Docker Desktop for macOS). 
 
 1. Create a cluster:
 
