@@ -98,3 +98,7 @@ E.g. Import `golang:1.26.1-alpine` into the cluster:
 The cluster will now use the locally cached image for future deployments.
 
 </details>
+
+## Documentation
+
+- [Middleware Chain](./docs/middleware.md)
