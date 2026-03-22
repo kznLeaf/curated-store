@@ -30,6 +30,8 @@
 | **jaeger** | Go (3rd-party) | Distributed tracing backend and UI; stores and visualizes distributed call chains. |
 | **shoppingassistantservice (Reserved)** | TBD | AI assistant entry point; currently reserved via frontend toggles and routing for future independent service integration. |
 
+
+
 ## Quickstart
 
 ### Prerequisites

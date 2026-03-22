@@ -8,6 +8,32 @@ This document outlines the authentication architecture and login flow for the **
 
 The project implements a **Reverse Proxy Authentication** pattern. Instead of the application handling OAuth2 handshakes directly, a dedicated sidecar or gateway service (**OAuth2 Proxy**) sits in front of the `frontend` service.
 
+```mermaid
+graph LR
+    subgraph Public_Network [External]
+        Browser[Web Browser]
+        Google[Google OAuth 2.0]
+    end
+
+    subgraph Kubernetes_Cluster [Kubernetes]
+        subgraph Proxy_Pod [Pod: oauth2-proxy]
+            ProxyApp[oauth2-proxy Engine]
+        end
+
+        subgraph Frontend_Pod [Pod: frontend]
+            Middleware[Middleware Stack]
+            Handlers[Business Handlers]
+        end
+    end
+
+    Browser -->|1. Request localhost:8080| ProxyApp
+    ProxyApp <-->|2. Authenticate| Google
+    ProxyApp -->|3. Set _oauth2_proxy Cookie| Browser
+    
+    ProxyApp ==>|4. Forward with X-Forwarded-User/Email| Middleware
+    Middleware --> Handlers
+```
+
 * **OAuth2 Proxy**: Acts as the gatekeeper. It handles provider redirection, callback validation, and session cookie management.
 * **Frontend Service**: Operates behind the proxy. It trusts the identity headers passed by the proxy and manages application-level session persistence.
 
