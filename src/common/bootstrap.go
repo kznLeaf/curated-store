@@ -40,7 +40,7 @@ func MustConnGRPC(ctx context.Context, conn **grpc.ClientConn, addr string) {
 	}
 }
 
-// InitTracing 初始化 OpenTelementry 链路追踪。这个函数会创建一个 OTLP gRPC 导出器，将追踪数据发送到指定的 collector 地址 COLLECTOR_SERVICE_ADDR，
+// InitTracing 初始化 OpenTelemetry 链路追踪。这个函数会创建一个 OTLP gRPC 导出器，将追踪数据发送到指定的 collector 地址 COLLECTOR_SERVICE_ADDR，
 // 并设置全局的 TracerProvider 和 Propagator。调用以后需要调用返回的 tp 的 Shutdown 方法来确保追踪数据被正确发送。
 func InitTracing(ctx context.Context, log *logrus.Logger) *sdktrace.TracerProvider {
 
