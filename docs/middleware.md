@@ -1,6 +1,40 @@
 # Middleware Chain
 
-![](img/middleware.png)
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant A as authorize
+    participant S as ensureSessionID
+    participant L as logHandler
+    participant M as mux/handler
+
+    C->>A: Request
+    A->>A: 填充 user/email 到 Context（若缺失）
+    alt 白名单路径
+        A->>S: next
+    else 非白名单
+        alt user/email 缺失
+            A-->>C: 401 Unauthorized
+        else user/email 齐全
+            A->>S: next
+        end
+    end
+
+    S->>S: 检查/生成 sessionID
+    S->>S: 写入 Context（必要时 Set-Cookie）
+    S->>L: next
+
+    alt /_healthz
+        L->>M: 直接透传
+    else 普通请求
+        L->>L: 注入 requestID 与 logger
+        L->>M: 调用业务处理
+        M-->>L: Response
+        L->>L: defer 记录耗时/状态码/响应大小
+    end
+
+    L-->>C: Response
+```
 
 Requests pass through a layered middleware stack before reaching the business logic handlers. This chain handles observability, security, and session management. See [middleware.go](../src/frontend/middleware.go) for more details.
 
