@@ -1,6 +1,6 @@
 **Curated Store** is restructured from Google's [microservices-demo](https://github.com/GoogleCloudPlatform/microservices-demo), including the following key updates:
 
-* **Authentication:** Add a login button on the homepage header and integrated [OAuth2 Proxy](https://github.com/oauth2-proxy/oauth2-proxy) with **Google login**, handling authentication, callbacks, session management, and identity header propagation to business contexts.
+* **Google OIDC Integration**：Used [OAuth2 Proxy](https://github.com/oauth2-proxy/oauth2-proxy) to manage authentication, callbacks, and identity propagation, with Google as the identity provider.
 * **Go Rewrite:** Ported all non-Python backend services to Go.
 * **OpenTelemetry Integration:** Integrated **full-chain tracing**, services report traces to a central Collector, which exports to **Jaeger**.
 * **Observability:** Added Kubernetes configurations for Jaeger to enable the tracing **Web UI** in local deployments.
@@ -72,7 +72,7 @@ flowchart LR
   OTEL --> JAEGER
 ```
 
-OAuth2 proxy (See [here](./docs/login.md) for more details):
+Authentication and Login (See [here](./docs/login.md) for more details):
 
 ```mermaid
 graph LR

@@ -1,12 +1,12 @@
-# Authentication and Login Technical Documentation
+# Authentication and Login 
 
-This document outlines the authentication architecture and login flow for the **Curated Store** project, focusing on the integration of **OAuth2 Proxy** and **Google OAuth 2.0**.
+This document outlines the authentication architecture and login flow for the Curated Store project, focusing on the integration of **OAuth2 Proxy** with Google as the primary OIDC IdP.
 
 ---
 
 ## Architecture Overview
 
-The project implements a **Reverse Proxy Authentication** pattern. Instead of the application handling OAuth2 handshakes directly, a dedicated sidecar or gateway service (**OAuth2 Proxy**) sits in front of the `frontend` service.
+The project implements a **Reverse Proxy Authentication** pattern. Instead of the application handling OAuth2 handshakes directly, a dedicated sidecar or gateway service (OAuth2 Proxy) sits in front of the `frontend` service.
 
 ```mermaid
 graph LR
