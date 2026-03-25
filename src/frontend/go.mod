@@ -40,7 +40,6 @@ require (
 )
 
 require (
-	github.com/gorilla/mux v1.8.1
 	github.com/sirupsen/logrus v1.9.4
 	golang.org/x/net v0.51.0 // indirect
 	golang.org/x/sys v0.41.0 // indirect

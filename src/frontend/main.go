@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"os/signal"
 	"time"
 
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
@@ -15,7 +16,6 @@ import (
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.39.0"
 
-	"github.com/gorilla/mux"
 	"github.com/kznLeaf/curated-store/infra/xgrpc"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
@@ -116,32 +116,48 @@ func main() {
 	xgrpc.MustConnGRPC(ctx, &svc.cartSvcConn, svc.cartSvcAddr)
 	xgrpc.MustConnGRPC(ctx, &svc.checkoutSvcConn, svc.checkoutSvcAddr)
 
-	// baseUrl := os.Getenv("BASE_URL") // 该环境变量位于 kustomize/components/custom-base-url/kustomization.yaml
+	router := http.NewServeMux()
 
-	// 设置路由规则和处理函数
-	r := mux.NewRouter()
-	r.HandleFunc(baseUrl+"/", svc.homeHandler).Methods(http.MethodGet, http.MethodHead)                               // 首页 get
-	r.HandleFunc(baseUrl+"/product/{id}", svc.productHandler).Methods(http.MethodGet, http.MethodHead)                // 产品详情页 get
-	r.HandleFunc(baseUrl+"/_healthz", func(w http.ResponseWriter, _ *http.Request) { fmt.Fprint(w, "[frontend]ok") }) // 健康检查
-	r.HandleFunc(baseUrl+"/setCurrency", svc.setCurrencyHandler).Methods(http.MethodPost)                             // 用户手动切换货币
-	r.HandleFunc(baseUrl+"/cart", svc.viewCartHandler).Methods(http.MethodGet, http.MethodHead)
-	r.PathPrefix(baseUrl + "/static/").Handler(http.StripPrefix(baseUrl+"/static/", http.FileServer(http.Dir("./static/")))) // 加载static/目录下的静态资源
-	r.HandleFunc(baseUrl+"/cart", svc.addToCartHandler).Methods(http.MethodPost)                                             // 添加商品到购物车
-	r.HandleFunc(baseUrl+"/cart", svc.viewCartHandler).Methods(http.MethodGet, http.MethodHead)
-	r.HandleFunc(baseUrl+"/cart/checkout", svc.placeOrderHandler).Methods(http.MethodPost) // 结账 post
-	r.HandleFunc(baseUrl+"/cart/empty", svc.emptyCartHandler).Methods(http.MethodPost)     // 清空购物车 post
-	r.HandleFunc(baseUrl+"/assistant", svc.assistantHandler).Methods(http.MethodGet)
-	r.HandleFunc(baseUrl+"/login", svc.loginHandler).Methods(http.MethodGet, http.MethodPost)
-	var handler http.Handler = r                   // r 实现了 http.Handler 接口，属于业务Handler
-	handler = &logHandler{log: log, next: handler} // Router实现了 http.Handler 接口
-	handler = ensureSessionID(handler)             // 注入 sessionID 管理中间件
-	handler = authorize(handler)          
+	router.HandleFunc("GET /", svc.homeHandler)
+	router.HandleFunc("GET /product/{id}", svc.productHandler)
+	router.HandleFunc("GET /_healthz", func(w http.ResponseWriter, _ *http.Request) { fmt.Fprint(w, "[frontend]ok") }) // 健康检查
+	router.HandleFunc("POST /setCurrency", svc.setCurrencyHandler)
+	router.HandleFunc("GET /cart", svc.viewCartHandler)
+	router.Handle("GET /static/", http.StripPrefix("/static/", http.FileServer(http.Dir("./static/"))))
+	router.HandleFunc("POST /cart", svc.addToCartHandler)
+	router.HandleFunc("POST /cart/checkout", svc.placeOrderHandler)
+	router.HandleFunc("POST /cart/empty", svc.emptyCartHandler)
+	router.HandleFunc("GET /assistant", svc.assistantHandler)
+	router.HandleFunc("GET /login", svc.loginHandler)
+
+	var handler http.Handler = router
+	handler = &logHandler{log: log, next: handler}
+	handler = ensureSessionID(handler)
+	handler = authorize(handler)
+	handler = otelhttp.NewHandler(handler, "frontend")
+
 	log.Infof("starting server on %s:%s", addr, srvPort)
+	srv := http.Server{
+		Addr:    addr + ":" + srvPort,
+		Handler: handler,
+	}
 
-	handler = otelhttp.NewHandler(handler, "frontend") // 使用 OpenTelemetry HTTP 中间件，实现服务端自动埋点创建入站span
+	idleConnectClose := make(chan struct{})
+	go func() {
+		quit := make(chan os.Signal, 1)
+		signal.Notify(quit, os.Interrupt)
+		<-quit
+		if err := srv.Shutdown(ctx); err != nil {
+			log.Fatalf("Server shutdown failed; %v", err)
+		}
+		close(idleConnectClose)
+	}()
 
-	// 启动 HTTP 服务器。传入handler，这样每次收到HTTP请求自动调用中间件链和路由规则
-	log.Fatal(http.ListenAndServe(addr+":"+srvPort, handler))
+	if err := srv.ListenAndServe(); err != http.ErrServerClosed {
+		log.Fatalf("HTTP server listenAndServe: %v", err)
+	}
+
+	<-idleConnectClose
 }
 
 // initTracing 初始化 OpenTelemetry 追踪

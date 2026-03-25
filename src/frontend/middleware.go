@@ -43,6 +43,8 @@ type responseRecorder struct {
 	w      http.ResponseWriter
 }
 
+type middleware func(http.Handler) http.Handler
+
 func (r *responseRecorder) Header() http.Header { return r.w.Header() }
 
 func (r *responseRecorder) Write(p []byte) (int, error) {
@@ -59,57 +61,56 @@ func (r *responseRecorder) WriteHeader(statusCode int) {
 	r.w.WriteHeader(statusCode)
 }
 
-// ServeHTTP 实现 http.Handler 接口，作为日志记录中间件处理 HTTP 请求。
+func CreateStack(xs ...middleware) middleware {
+	return func(next http.Handler) http.Handler {
+		for i := len(xs) - 1; i >= 0; i-- {
+			x := xs[i]
+			next = x(next)
+		}
+		return next
+	}
+}
+
 func (lh *logHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if strings.HasSuffix(r.URL.Path, "/_healthz") {
 		lh.next.ServeHTTP(w, r)
 		return
 	}
 
-	// 1. 获取请求上下文并生成唯一的请求 ID
 	ctx := r.Context()
 	requestID, _ := uuid.NewRandom()
-	// 将请求 ID 注入到上下文中，供后续链路追踪使用。注意这里是 ctxKeyRequestID，用于日志记录，而不是 ctxKeySessionID 用于会话管理。
 	ctx = context.WithValue(ctx, ctxKeyRequestID{}, requestID.String())
 
-	// 2. 记录请求开始时间，用于计算处理耗时
 	start := time.Now()
-	// 使用 responseRecorder 包装原始的 ResponseWriter，以便记录响应状态码和字节数
 	rr := &responseRecorder{w: w}
 
-	// 3. 每次打日志时自动带上下面三个字段
 	log := lh.log.WithFields(logrus.Fields{
-		"http.req.path":   r.URL.Path,         // 请求路径，如 /product/123
-		"http.req.method": r.Method,           // 请求方法，如 GET、POST
-		"http.req.id":     requestID.String(), // 请求唯一标识符
+		"http.req.path":   r.URL.Path,
+		"http.req.method": r.Method,
+		"http.req.id":     requestID.String(),
 	})
 
-	// 4. 如果上下文中存在会话 ID（由 ensureSessionID 中间件设置），添加到日志中
 	if v, ok := r.Context().Value(ctxKeySessionID{}).(string); ok {
 		log = log.WithField("session", v)
 	}
 
-	// 5. 记录请求开始日志
-	log.Debug("request started")
+	if v, ok := r.Context().Value(ctxKeyUserID{}).(string); ok {
+		log = log.WithField("userId", v)
+	}
 
-	// 6. 使用 defer 确保在函数返回时记录请求完成日志
-	// 这样即使发生 panic 也能记录日志（配合 recover 使用）
 	defer func() {
 		log.WithFields(logrus.Fields{
-			"http.resp.took_ms": int64(time.Since(start) / time.Millisecond), // 请求处理耗时（毫秒）
-			"http.resp.status":  rr.status,                                   // HTTP 状态码，如 200、404、500
-			"http.resp.bytes":   rr.b,                                        // 响应体大小（字节）
+			"http.resp.took_ms": int64(time.Since(start) / time.Millisecond),
+			"http.resp.status":  rr.status,
+			"http.resp.bytes":   rr.b,
 		}).Debugf("request complete")
 	}()
 
-	// 7. 将配置好的 logger 注入到请求上下文中
 	// 后续的 handler 可以通过 r.Context().Value(ctxKeyLog{}) 获取这个 logger
 	ctx = context.WithValue(ctx, ctxKeyLog{}, log)
 	r = r.WithContext(ctx)
 
-	// 8. 调用下一个 handler（中间件链模式）
-	// 使用 responseRecorder 而不是原始的 ResponseWriter，以便记录响应信息
-	lh.next.ServeHTTP(rr, r) // 调用 mux，开始执行业务逻辑
+	lh.next.ServeHTTP(rr, r)
 }
 
 // ensureSessionID 确保会话ID存在，并将会话 ID 保存到 context 中。
@@ -152,11 +153,11 @@ func ensureSessionID(next http.Handler) http.HandlerFunc {
 		// 将 sessionID 设置到请求上下文中，后续处理函数可以获取到
 		ctx := context.WithValue(r.Context(), ctxKeySessionID{}, sessionID)
 		r = r.WithContext(ctx)
-		next.ServeHTTP(w, r) 
+		next.ServeHTTP(w, r)
 	}
 }
 
-// authorize handle authorization for incoming requests. Obtain userID and email from header, and store them in context for later use. 
+// authorize handle authorization for incoming requests. Obtain userID and email from header, and store them in context for later use.
 // If paths that are not in the whitelist, then will skip authorization and directly call the next handler.
 func authorize(next http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {

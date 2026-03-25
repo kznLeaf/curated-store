@@ -14,7 +14,6 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/gorilla/mux"
 	pb "github.com/kznLeaf/curated-store/src/frontend/genproto"
 	money "github.com/kznLeaf/curated-store/src/frontend/money"
 	validator "github.com/kznLeaf/curated-store/src/frontend/validator"
@@ -171,7 +170,7 @@ func (fe *frontendServer) productHandler(w http.ResponseWriter, r *http.Request)
 	log := r.Context().Value(ctxKeyLog{}).(logrus.FieldLogger)
 	ctx := r.Context()
 
-	id := mux.Vars(r)["id"]
+	id := r.PathValue("id")
 	if id == "" {
 		renderHTTPError(log, r, w, errors.New("product id not specified"), http.StatusBadRequest)
 		return
