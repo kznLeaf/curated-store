@@ -65,19 +65,19 @@ func IsAuthWhitelistPath(requestPath string, baseUrl string) bool {
 		"/login":       {},
 		"/_healthz":    {},
 		"/setCurrency": {},
-		"/static/":    {}, 
-		"/product/":   {},
+		"/static/":     {},
+		"/product/":    {},
 	}
 
-	if strings.HasPrefix(requestPath, "/static/") || 
-       (baseUrl != "" && strings.HasPrefix(requestPath, baseUrl+"/static/")) {
-        return true
-    }
+	if strings.HasPrefix(requestPath, "/static/") ||
+		(baseUrl != "" && strings.HasPrefix(requestPath, baseUrl+"/static/")) {
+		return true
+	}
 
-	if strings.HasPrefix(requestPath, "/product/") || 
-       (baseUrl != "" && strings.HasPrefix(requestPath, baseUrl+"/product/")) {
-        return true
-    }
+	if strings.HasPrefix(requestPath, "/product/") ||
+		(baseUrl != "" && strings.HasPrefix(requestPath, baseUrl+"/product/")) {
+		return true
+	}
 
 	if _, ok := allowed[requestPath]; ok {
 		return true

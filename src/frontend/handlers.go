@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"slices"
 	"strconv"
 	"strings"
 	"text/template"
@@ -134,12 +135,7 @@ var validEnvs = []string{"local", "gcp", "azure", "aws", "onprem", "alibaba"}
 
 // stringinSlice 判断字符串 val 是否在字符串 slice 切片中
 func stringinSlice(slice []string, val string) bool {
-	for _, item := range slice {
-		if item == val {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(slice, val)
 }
 
 // setPlatformDetails 用于渲染首页左侧的 platform-flag 元素，在 homehandler 完成赋值，后续plat被传入injectCommonTemplateData
@@ -343,11 +339,11 @@ func (fe *frontendServer) addToCartHandler(w http.ResponseWriter, r *http.Reques
 	log := r.Context().Value(ctxKeyLog{}).(logrus.FieldLogger)
 	ctx := r.Context()
 
-	productId := r.FormValue("product_id") // 从请求中提取 product_id 参数
+	productID := r.FormValue("product_id") // 从请求中提取 product_id 参数
 	quantity, _ := strconv.ParseUint(r.FormValue("quantity"), 10, 32)
 
 	payload := validator.AddToCartPayload{
-		ProductID: productId,
+		ProductID: productID,
 		Quantity:  quantity,
 	}
 	if err := payload.Validate(); err != nil {
@@ -394,7 +390,6 @@ func (fe *frontendServer) emptyCartHandler(w http.ResponseWriter, r *http.Reques
 		renderHTTPError(log, r, w, fmt.Errorf("failed to empty cart: %v", err), http.StatusInternalServerError)
 		return
 	}
-	// TODO Referer校验，避免开放重定向漏洞
 	referer := r.Referer()
 	if referer == "" {
 		referer = baseUrl + "/"

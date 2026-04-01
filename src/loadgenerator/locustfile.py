@@ -1,8 +1,8 @@
 import datetime
-
-from locust import TaskSet, FastHttpUser, between
-from faker import Faker
 import random
+
+from faker import Faker
+from locust import FastHttpUser, TaskSet, between
 
 # Locust 压测脚本
 

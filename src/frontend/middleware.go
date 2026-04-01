@@ -43,8 +43,6 @@ type responseRecorder struct {
 	w      http.ResponseWriter
 }
 
-type middleware func(http.Handler) http.Handler
-
 func (r *responseRecorder) Header() http.Header { return r.w.Header() }
 
 func (r *responseRecorder) Write(p []byte) (int, error) {
@@ -59,16 +57,6 @@ func (r *responseRecorder) Write(p []byte) (int, error) {
 func (r *responseRecorder) WriteHeader(statusCode int) {
 	r.status = statusCode
 	r.w.WriteHeader(statusCode)
-}
-
-func CreateStack(xs ...middleware) middleware {
-	return func(next http.Handler) http.Handler {
-		for i := len(xs) - 1; i >= 0; i-- {
-			x := xs[i]
-			next = x(next)
-		}
-		return next
-	}
 }
 
 func (lh *logHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
